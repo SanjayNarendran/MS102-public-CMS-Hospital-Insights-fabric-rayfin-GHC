@@ -1,0 +1,21 @@
+{
+  "name": "cms-quality-rayfin",
+  "description": "CMS Hospital Quality & Safety and Maternity care dashboard hosted as a Microsoft Fabric App (Rayfin static hosting). Builds from the dashboard at the repository root.",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/build.mjs && python3 -m http.server 5173 --bind 127.0.0.1 --directory dist",
+    "deploy": "rayfin up",
+    "deploy:static": "rayfin up staticapp deploy"
+  },
+  "devDependencies": {
+    "@microsoft/rayfin-cli": "^1.36.2"
+  },
+  "allowScripts": {
+    "keytar@7.9.0": true,
+    "esbuild@0.28.1": true,
+    "protobufjs@7.6.6": true
+  }
+}

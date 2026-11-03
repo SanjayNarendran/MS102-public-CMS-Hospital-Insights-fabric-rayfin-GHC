@@ -1,0 +1,35 @@
+# This repository ships code only. Every data file below is generated from public sources by build_all.py
+# (see AGENTS.md); never commit them.
+
+# Downloads from CMS, Census, GeoNames and OSRM (about 2.5 GB once unpacked)
+data/raw/
+# Tables built from those downloads
+data/core/
+data/fabric/
+.geocode-cache.json
+# Data the dashboard loads
+assets/data.js
+assets/quality-extra.js
+assets/maternity.js
+assets/maternity-access.js
+assets/hospital-locations.js
+assets/zip-centroids.js
+assets/places.js
+assets/state-shapes.js
+assets/verification.js
+
+# Fabric app (Rayfin) build output, dependencies and per-machine deployment state
+fabric-app/node_modules/
+fabric-app/dist/
+fabric-app/rayfin/.env
+fabric-app/rayfin/.env.*
+fabric-app/rayfin/.deployments.json
+fabric-app/rayfin/.temp/
+
+# Local settings (workspace and model IDs)
+.env
+*.local.env
+
+__pycache__/
+*.pyc
+.DS_Store

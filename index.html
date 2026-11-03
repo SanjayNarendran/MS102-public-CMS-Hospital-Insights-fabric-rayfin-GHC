@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hospital Quality &amp; Safety · CMS</title>
+  <script src="assets/js/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <meta name="theme-color" content="#faf9f5" />
+  <link rel="stylesheet" href="assets/fonts.css" />
+  <link rel="stylesheet" href="assets/vendor/maplibre/maplibre-gl.css" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#overview" aria-label="Hospital Quality, overview">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">Hospital Quality</span>
+        <span class="brand-sub">on Microsoft Fabric</span>
+      </a>
+      <div class="view-tabs" role="tablist" aria-label="Dashboard">
+        <a class="view-tab" role="tab" id="tab-overview" href="#overview" data-view="overview" aria-controls="view-overview">Overview</a>
+        <a class="view-tab" role="tab" id="tab-quality" href="#quality" data-view="quality" aria-controls="view-quality">Quality &amp; safety</a>
+        <a class="view-tab" role="tab" id="tab-insights" href="#insights" data-view="insights" aria-controls="view-insights">Insights and takeaways</a>
+        <span class="view-tab-ink" aria-hidden="true"></span>
+      </div>
+      <div class="actions">
+        <span class="source-id mono" id="sourceId" title="Public data from the CMS Provider Data Catalog">CMS Care Compare</span>
+        <div class="seg" id="themeSeg" role="group" aria-label="Colour theme">
+          <button type="button" data-theme-set="light" aria-pressed="true">Light</button>
+          <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="section-bar" id="sectionBar">
+      <div class="section-bar-inner"><nav class="chapter-pills" aria-label="Sections"></nav><a class="section-bar-name" href="#quality"></a></div>
+    </div>
+  </header>
+
+  <!-- Overview: what the dashboard is, what is in it and where the data comes from (assets/js/overview.js fills the numbers) -->
+  <main id="view-overview" class="view ov" role="tabpanel" aria-labelledby="tab-overview" hidden>
+    <section id="overview" class="hero ov-hero">
+      <div class="hero-grid">
+        <div class="hero-main">
+          <h1 class="headline">Hospital quality, safety and access to maternity care across the U.S.</h1>
+          <p class="lede">How infections, patient experience, patient safety and outcomes have moved across America’s hospitals from 2019 to 2025, and how far women live from a hospital that delivers babies. The dashboard brings together CMS public reporting for <b data-fact="nFac"></b> hospitals: CDC standardized infection ratios, HCAHPS patient experience and the PSI‑90 safety composite, plus CMS star ratings, death and readmission rates, Medicare penalties and maternity care data, all built from public CMS and Census files.</p>
+          <div class="ov-cta">
+            <a class="btn btn-ink btn-lg" href="#quality">Open the dashboard</a>
+            <a class="btn btn-lg" href="#insights">Read the insights</a>
+          </div>
+        </div>
+        <dl class="hero-facts" id="ovFacts"></dl>
+      </div>
+    </section>
+
+    <section class="doc-sec" id="ov-contents">
+      <div class="doc-head">
+        <h2>What’s in the dashboard</h2>
+        <p>Two views of the same data: a dashboard to explore and a written briefing to read.</p>
+      </div>
+      <div class="doc-body">
+        <div class="ov-tab">
+          <div class="ov-tab-head">
+            <h3><a href="#quality">Quality &amp; safety</a></h3>
+            <p>Nine numbered sections, each with its argument on the left and the charts and maps that support it on the right. Fold any section away, or jump between them with the numbered pills.</p>
+          </div>
+          <ol class="ov-sections" id="ovSections"></ol>
+        </div>
+        <div class="ov-tab">
+          <div class="ov-tab-head">
+            <h3><a href="#insights">Insights and takeaways</a></h3>
+            <p><span id="ovInsightCount">Thirteen</span> findings for clinical and operational leaders. Each names what moved, by how much, and what it means for the teams delivering care, with the trend behind it and an executive takeaway.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-sec" id="ov-data">
+      <div class="doc-head">
+        <h2>Where the data comes from</h2>
+        <p>Every figure comes from public CMS, CDC and Census reporting. These are hospital-level aggregates, not patient records.</p>
+      </div>
+      <div class="doc-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Data</th><th>Source</th><th>What it covers</th><th>Sections</th></tr></thead>
+            <tbody>
+              <tr><td><b>HAI</b><span class="ds-full">Healthcare-associated infections</span></td><td>CDC NHSN via CMS Care Compare archive; table <span class="mono">HAI</span></td><td>Standardized infection ratios, observed and predicted cases and 95% intervals for CLABSI, CAUTI, MRSA, C.&nbsp;diff and surgical-site infections after colon surgery and hysterectomy</td><td class="ov-secs">01–03, 07, 09</td></tr>
+              <tr><td><b>HCAHPS</b><span class="ds-full">Patient experience survey</span></td><td>HCAHPS survey via CMS Care Compare archive; table <span class="mono">HCAHPS</span></td><td>Summary star rating and the survey questions behind it: communication, responsiveness, cleanliness, quietness, discharge and medicines</td><td class="ov-secs">03, 05, 07, 09</td></tr>
+              <tr><td><b>PSI‑90</b><span class="ds-full">Patient safety composite</span></td><td>AHRQ PSI‑90 via CMS Care Compare archive; table <span class="mono">PSI90</span></td><td>The patient safety and adverse events composite and its components, such as postoperative respiratory failure, sepsis and wound dehiscence</td><td class="ov-secs">03, 06, 07, 09</td></tr>
+              <tr><td><b>Hospitals and outcomes</b></td><td>CMS Care Compare: Hospital General Information; Complications and Deaths; Unplanned Hospital Visits; Timely and Effective Care</td><td>Overall star rating, hospital type and location, 30‑day death and readmission rates, time spent in the emergency department</td><td class="ov-secs">03, 08, 09</td></tr>
+              <tr><td><b>Medicare penalties</b></td><td>CMS Hospital-Acquired Condition Reduction and Hospital Readmissions Reduction programs</td><td>Hospitals whose Medicare payments were cut in the latest fiscal year</td><td class="ov-secs">08, 09</td></tr>
+              <tr><td><b>Maternity care</b></td><td>CMS Maternal Health (SM_7, Birthing-Friendly); CMS Provider of Services file; CMS hospital cost reports (HCRIS)</td><td>Hospitals that deliver babies, have a NICU or stopped delivering; NICU levels for Minnesota from published sources (representative only; may change without notice)</td><td class="ov-secs">04</td></tr>
+              <tr><td><b>Population</b></td><td>U.S. Census Bureau: ACS 5‑year table B01001; 2020 census tract centers of population</td><td>Women aged 15–44 in every census tract, and where they live</td><td class="ov-secs">04</td></tr>
+              <tr><td><b>Maps and routes</b></td><td>OpenStreetMap via OpenFreeMap and OSRM; U.S. Census geocoder; GeoNames</td><td>Basemaps, drive times and routes by road, address lookup and place names</td><td class="ov-secs">03, 04</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-sec" id="ov-fabric">
+      <div class="doc-head">
+        <h2>How it runs on Microsoft Fabric</h2>
+        <p>The dashboard is a static web app. It runs from local files, and can optionally keep its data in Fabric and be hosted by Fabric.</p>
+      </div>
+      <div class="doc-body">
+        <dl class="ov-spec">
+          <div><dt>Semantic model CMS</dt><dd>Tables <span class="mono">HAI</span>, <span class="mono">HCAHPS</span> and <span class="mono">PSI90</span> (infections, patient experience and patient safety) in the lakehouse <span class="mono">lh_cms_core</span>, served through Direct Lake and queried with DAX (optional: the same numbers can be built locally)</dd></div>
+          <div><dt>Semantic model CMS V2</dt><dd>Outcomes and maternity tables in the lakehouse <span class="mono">lh_cms_v2</span>, served through Direct Lake</dd></div>
+          <div><dt>Fabric App</dt><dd>This dashboard, hosted with Rayfin static hosting; viewers sign in with their Fabric account</dd></div>
+          <div><dt>Live services</dt><dd>Map tiles, road routing and address lookup are fetched while you use the maps; your location stays in the browser</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <main id="view-quality" class="view" role="tabpanel" aria-labelledby="tab-quality" hidden>
+    <!-- Summary -->
+    <section id="quality" class="hero q-hero">
+      <div class="hero-grid">
+        <div class="hero-main">
+          <h1 class="headline" id="headline">Most hospital infections are at their lowest in seven years. One surgical infection is rising.</h1>
+          <p class="lede" id="lede"></p>
+        </div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+
+    <!-- Sections: a contents rail (State filter, then every section; the one you're reading expands to its title and
+         description, copied in by main.js) beside the sections themselves -->
+    <div class="q-layout">
+    <aside class="q-rail" id="qRail" aria-label="Sections">
+      <div class="q-rail-inner">
+        <label class="state-pick" title="Show every chart for one state"><span>State</span>
+          <select id="stateFocus" aria-label="Focus state"><option value="">All states</option></select>
+        </label>
+        <span class="q-rail-label">Sections</span>
+        <ol class="q-toc" id="qToc"></ol>
+      </div>
+    </aside>
+    <div class="q-sections">
+
+    <!-- 01 Infections -->
+    <section id="infections" class="chapter" data-num="01" data-label="Infections">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="infections-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 01</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="infections-body"><span class="sr-only">01 </span><span class="chapter-name">Infections rose with COVID‑19 and have fallen since</span></button></h2>
+          <div class="chapter-lede"><div><p>Standardized Infection Ratios (SIR) compare observed infections with the number predicted from the 2015 national baseline, so <b>below 1.0 is better</b>. Device-associated infections spiked as COVID‑19 filled ICUs, and MRSA bloodstream infections briefly exceeded the baseline at <b data-fact="mrsaPeak"></b> in <b data-fact="mrsaPeakYear"></b>. Central‑line, catheter and C.&nbsp;diff infections have since reached new lows. Surgical‑site infections have not.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="infections-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="card span-12 has-explain">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 1</div>
+              <h3>National infection ratio by type of infection</h3>
+              <p class="sub">National pooled SIR (Σ observed ÷ Σ predicted), report years 2019–2025. Hover any panel to compare a year across all six.</p>
+            </div>
+            <div class="card-tools">
+              <button type="button" class="explain-btn" id="explainFig1" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.35" fill="currentColor"/></svg>
+                Explain
+              </button>
+              <div class="legend-inline">
+                <span><i class="sw line good"></i>Improved vs 2019</span>
+                <span><i class="sw line bad"></i>Worse vs 2019</span>
+                <span><i class="sw band"></i>COVID‑19 years</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart" id="fig-sm"></div>
+        </article>
+
+        <article class="card span-6">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 2</div>
+              <h3>Change in each infection since 2019</h3>
+              <p class="sub">National SIR in 2019 (○) and 2025 (●); ◆ marks the pandemic‑era peak.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-db"></div>
+        </article>
+
+        <article class="card span-6">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 3</div>
+              <h3>Hospitals flagged better or worse than benchmark</h3>
+              <p class="sub">Share of reporting hospitals whose 95% CI sits wholly below (better) or above (worse) 1.0.</p>
+            </div>
+          </div>
+          <div class="chips" id="chips-flags" role="group" aria-label="Infection"></div>
+          <div class="chart" id="fig-flags"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 02 Benchmarking -->
+    <section id="benchmark" class="chapter" data-num="02" data-label="Benchmarking">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="benchmark-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 02</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="benchmark-body"><span class="sr-only">02 </span><span class="chapter-name">Hospitals with more infections than expected</span></button></h2>
+          <div class="chapter-lede"><div><p>A raw SIR can mislead: a small hospital with a single infection can post an SIR of 3.0 by chance. The funnel plot sets every hospital against the range expected for its size, so <b>only points outside the funnel are real signals</b>. In the latest report, <b data-fact="worseNow"></b> hospital‑infection pairs were significantly worse than benchmark, down from <b data-fact="worsePeak"></b> in <b data-fact="worsePeakYear"></b>.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="benchmark-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="card span-12">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 4</div>
+              <h3>SIR against predicted infections for every hospital, 2025 report</h3>
+              <p class="sub">The shaded band is the 95% Poisson control limit around SIR 1.0 and the dashed line is 99.8%. Colour is the CMS classification from each hospital’s own 95% CI.</p>
+            </div>
+            <div class="search">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <input id="funnelSearch" type="search" placeholder="Highlight a hospital…" autocomplete="off" aria-label="Highlight hospital in funnel plot" />
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="chips" id="chips-funnel" role="group" aria-label="Infection"></div>
+            <div class="legend-inline" id="funnelLegend"></div>
+          </div>
+          <div class="chart" id="fig-funnel"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 03 Geography -->
+    <section id="geography" class="chapter" data-num="03" data-label="Geography">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="geography-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 03</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="geography-body"><span class="sr-only">03 </span><span class="chapter-name">Infection rates differ by state</span></button></h2>
+          <div class="chapter-lede"><div><p><span data-fact="geoSentence"></span> Click a state to see its hospitals on a street map, or use your location to compare the hospitals nearest you, including those across state lines.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="geography-body"><div class="chapter-inner">
+      <div class="chips scroll" id="chips-map" role="group" aria-label="Map metric"></div>
+      <div class="bento">
+        <article class="card span-8" id="mapCard">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow" id="mapEyebrow">Fig 5</div>
+              <h3 id="mapTitle">State results</h3>
+              <p class="sub" id="mapSub"></p>
+            </div>
+            <div class="hm-tools" id="hmTools" hidden>
+              <button type="button" class="btn" id="hmRanksToggle" aria-pressed="false" aria-controls="ranksCard">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                <span>Show rankings</span>
+              </button>
+              <button type="button" class="btn" id="hmFullBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Full screen
+              </button>
+            </div>
+          </div>
+          <div class="hm-bar" id="hmBar" hidden>
+            <button type="button" class="btn hm-back" id="hmBack" hidden>
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              All states
+            </button>
+            <div class="hm-find">
+              <button type="button" class="btn hm-locate" id="hmLocate">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Hospitals near me
+              </button>
+              <form class="search hm-search" id="hmSearchForm" role="search" autocomplete="off">
+                <svg class="hm-search-ico" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                <input id="hmSearch" type="text" placeholder="ZIP, city or state" aria-label="Search by ZIP code, city or state" role="combobox"
+                  aria-autocomplete="list" aria-expanded="false" aria-controls="hmSuggest" autocomplete="off" spellcheck="false" />
+                <button type="submit" class="hm-go">Go</button>
+                <ul class="hm-suggest" id="hmSuggest" role="listbox" aria-label="Matching places" hidden></ul>
+              </form>
+              <label class="hm-radius" id="hmRadiusWrap" hidden>Within
+                <select id="hmRadius" aria-label="Search radius in miles">
+                  <option value="5">5 mi</option>
+                  <option value="10" selected>10 mi</option>
+                  <option value="25">25 mi</option>
+                  <option value="50">50 mi</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <p class="hm-status" id="hmStatus" role="status" aria-live="polite"></p>
+          <div class="chart" id="fig-map"></div>
+          <div class="hmap" id="hospMap" hidden>
+            <aside class="hm-side" id="hmSide" aria-label="Hospital search and results">
+              <div class="hm-side-head">
+                <h3 id="hmSideTitle"></h3>
+                <div class="hm-side-actions">
+                  <button type="button" class="hm-icon-btn" id="hmSideClose" aria-controls="hmSide" aria-expanded="true" aria-label="Hide side panel" title="Hide side panel">
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 4.5v15M16 9.5 13.5 12l2.5 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button type="button" class="hm-icon-btn" id="hmExitFull" aria-label="Exit full screen" title="Exit full screen (Esc)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <label class="hm-metric">Colour hospitals by
+                <select id="hmMetric"></select>
+              </label>
+              <div class="hm-side-body" id="hmSideBody"></div>
+            </aside>
+            <div class="hm-stage" id="hmStage">
+              <div class="hm-canvas" id="hmCanvas" aria-label="Street map of hospitals. The hospital explorer below lists the same hospitals."></div>
+              <button type="button" class="hm-map-btn hm-side-show" id="hmSideShow" aria-controls="hmSide">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                Show list
+              </button>
+              <label class="hm-style-pick" title="Map style">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m3 13 9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                <select id="hmStyle" aria-label="Map style"></select>
+              </label>
+              <button type="button" class="hm-map-btn hm-expand" id="hmFullMapBtn" aria-label="Full screen map" title="Full screen">
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path class="hm-ico-open" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path class="hm-ico-close" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button type="button" class="hm-side-toggle" id="hmSideToggle" aria-controls="hmSide" aria-expanded="true" aria-label="Collapse side panel" title="Collapse side panel">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="hm-legend" id="hmLegend"></div>
+            </div>
+            <section class="hm-near" id="hmNear" aria-labelledby="hmNearTitle" hidden>
+              <div class="hm-near-head">
+                <div class="hm-near-titles">
+                  <h4 class="hm-near-h">
+                    <button type="button" class="hm-collapse" id="hmNearToggle" aria-expanded="true" aria-controls="hmNearBody">
+                      <span id="hmNearTitle"></span>
+                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  </h4>
+                  <p class="sub" id="hmNearSub"></p>
+                </div>
+                <div class="chips" id="hmSort" role="group" aria-label="Sort hospitals"></div>
+              </div>
+              <div class="hm-near-body" id="hmNearBody">
+                <div class="hm-near-inner">
+                  <ol class="hm-list" id="hmList"></ol>
+                  <p class="hm-disclaimer">In an emergency, go to the nearest emergency department or call 911. These measures describe past performance of hospitals that report to CMS; use them alongside advice from your doctor.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+        <article class="card span-4" id="ranksCard">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 6</div>
+              <h3>States ranked</h3>
+              <p class="sub" id="rankSub"></p>
+            </div>
+          </div>
+          <div id="fig-ranks" class="ranks"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 04 Maternity care: how far is the nearest hospital that delivers babies? (assets/js/maternity.js, data built by build_maternity.py) -->
+    <section id="maternity" class="chapter mat-find-chapter" data-num="04" data-label="Maternity">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="maternity-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 04</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="maternity-body"><span class="sr-only">04 </span><span class="chapter-name" id="matHeadline">5.3 million women of childbearing age live more than half an hour from a hospital that delivers babies.</span></button></h2>
+          <div class="chapter-lede"><div><p id="matLede">That is about <b>1 in 12</b> women aged 15–44 in the U.S., and <b>542,000</b> live more than an hour away. If you are expecting, enter where you live to see the nearest labor and delivery care and newborn intensive care unit, the usual drive time and directions.</p><ul class="caveat how-to" aria-label="Using the map">
+            <li><b>Search:</b> enter an address, ZIP code or town, or use your location, for the three closest hospitals that deliver babies and the nearest NICU.</li>
+            <li><b>Shading:</b> tinted areas are more than 30 minutes’ drive from care, hatched areas more than an hour.</li>
+            <li><b>Any spot:</b> click the map and choose <b>Show nearest hospitals &amp; NICU from here</b>.</li>
+          </ul></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="maternity-body"><div class="chapter-inner">
+      <article class="card mat-card" id="matCard">
+        <div class="mat-wrap" id="matWrap">
+          <aside class="mat-side" id="matSide" aria-label="Search and results">
+            <form class="mat-find" id="matForm" role="search" autocomplete="off">
+              <label class="mat-find-label sr-only" for="matSearch">Where do you live?</label>
+              <div class="search mat-search">
+                <button type="button" class="mat-ico-btn mat-locate" id="matLocate" aria-label="Use my location" title="Use my location">
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+                <input id="matSearch" type="text" placeholder="Address, ZIP code or town" aria-label="Your address, ZIP code or town" role="combobox"
+                  aria-autocomplete="list" aria-expanded="false" aria-controls="matSuggest" spellcheck="false" />
+                <button type="button" class="mat-ico-btn mat-clear" id="matClear" aria-label="Clear search" title="Clear search" hidden>
+                  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                </button>
+                <button type="submit" class="mat-go">Find</button>
+                <ul class="hm-suggest mat-suggest" id="matSuggest" role="listbox" aria-label="Matching places" hidden></ul>
+              </div>
+              <p class="mat-try" id="matTry"></p>
+              <p class="mat-status" id="matStatus" role="status" aria-live="polite"></p>
+            </form>
+            <button type="button" class="mat-res-bar" id="matResBar" aria-controls="matResults" aria-expanded="true" hidden>
+              <span class="mat-res-sum" id="matResSum"></span>
+              <span class="mat-res-act"><span id="matResAct">Hide</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+            <div class="mat-results" id="matResults" aria-live="polite"></div>
+          </aside>
+          <div class="mat-stage" id="matStage">
+            <div class="mat-canvas" id="matCanvas" aria-label="Map shaded by estimated drive time to the nearest hospital that delivers babies"></div>
+            <div class="mat-mode" id="matMode" role="group" aria-label="Show drive time to"></div>
+            <label class="hm-style-pick mat-style-pick" title="Map style">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m3 13 9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              <select id="matStyle" aria-label="Map style"></select>
+            </label>
+            <button type="button" class="hm-map-btn mat-expand" id="matFullBtn" aria-label="Full screen map" title="Full screen">
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path class="mat-ico-open" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path class="mat-ico-close" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="mat-legend" id="matLegend"></div>
+          </div>
+        </div>
+      </article>
+      </div></div>
+    </section>
+
+    <!-- 05 Experience -->
+    <section id="experience" class="chapter" data-num="05" data-label="Experience">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="experience-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 05</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="experience-body"><span class="sr-only">05 </span><span class="chapter-name">Patient ratings have recovered, but not on every question</span></button></h2>
+          <div class="chapter-lede"><div><p>The average HCAHPS summary star rating dipped to <b data-fact="starLow"></b> in <b data-fact="starLowYear"></b> and is back to <b data-fact="starNow"></b> (2019: <b data-fact="star19"></b>). <b data-fact="dimsBelow"></b> survey dimensions with comparable data still score below 2019. Communication about medicines has fallen most, by <b data-fact="medsDelta"></b> points.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="experience-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="fig span-6">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 7</div>
+              <h3>HCAHPS summary star rating by year</h3>
+              <p class="sub">Share of rated hospitals, centred on 3 stars.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-stars"></div>
+        </article>
+        <article class="fig span-6">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 8</div>
+              <h3>Survey questions compared with 2019</h3>
+              <p class="sub">Linear mean score. The first column is the 2019 baseline; the others show the change in points.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-heat"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 06 Safety -->
+    <section id="safety" class="chapter" data-num="06" data-label="Safety">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="safety-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 06</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="safety-body"><span class="sr-only">06 </span><span class="chapter-name">Two surgical complications are rising</span></button></h2>
+          <div class="chapter-lede"><div><p>PSI‑90 is CMS’s weighted composite of in‑hospital adverse events (1.0 = expected). The national distribution has barely moved since 2019, but rates of postoperative respiratory failure (<b data-fact="respChg"></b>) and wound dehiscence (<b data-fact="dehiscChg"></b>) have climbed. AHRQ revises the specifications from time to time, so read long‑run component changes with care.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="safety-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="fig span-5">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 9</div>
+              <h3>PSI‑90 composite across hospitals</h3>
+              <p class="sub">Median with 10th–90th percentile band. No 2020 release.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-psi"></div>
+        </article>
+        <article class="fig span-7">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 10</div>
+              <h3>PSI component rates, 2019 and 2024</h3>
+              <p class="sub">Change in mean rate per 1,000 eligible discharges. Higher means more adverse events.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-psicomp"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 07 Connections -->
+    <section id="connections" class="chapter" data-num="07" data-label="Connections">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="connections-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 07</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="connections-body"><span class="sr-only">07 </span><span class="chapter-name">Hospitals that patients rate highly have fewer infections</span></button></h2>
+          <div class="chapter-lede"><div><p>Matched hospital by hospital, <b>none</b> of the <b data-fact="n5hai"></b> five‑star hospitals with infection data was flagged worse than benchmark on any infection, against <b data-fact="star1Worse"></b> of one‑star hospitals. Their PSI‑90 scores are lower too. <span class="caveat">This is an association, not a cause. Five‑star hospitals are usually smaller (a median of <b data-fact="pred5"></b> predicted C.&nbsp;diff cases, against <b data-fact="pred3"></b> at three stars), which also widens their confidence intervals.</span></p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="connections-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="fig span-5">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 11</div>
+              <h3>Hospitals with at least one infection flagged worse</h3>
+              <p class="sub">By HCAHPS summary star rating, 2025.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-starflags"></div>
+        </article>
+        <article class="fig span-7">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 12</div>
+              <h3>PSI‑90 distribution by star rating</h3>
+              <p class="sub">Density of hospital PSI‑90 composite scores, with a tick at the median. Left of 1.0 is safer than expected.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-ridge"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 08 Outcomes (local CMS Care Compare files: assets/quality-extra.js) -->
+    <section id="outcomes" class="chapter" data-num="08" data-label="Outcomes">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="outcomes-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 08</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="outcomes-body"><span class="sr-only">08 </span><span class="chapter-name">Deaths, readmissions, emergency waits and penalties</span></button></h2>
+          <div class="chapter-lede"><div><p>CMS’s overall star rating rolls mortality, safety, readmissions, patient experience and timely care into one score. Only <b data-fact="ovrTop"></b> of <b data-fact="ovrRated"></b> rated hospitals earn four or five stars, and <b data-fact="ovrUnrated"></b> report too few measures to be rated at all. Patients sent home from the emergency department spend a median <b data-fact="edMedian"></b> there; at one hospital in ten it is over <b data-fact="edP90"></b>. Medicare cut payments to <b data-fact="hacCut"></b> hospitals (<b data-fact="hacPct"></b>) for hospital‑acquired conditions this year.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="outcomes-body"><div class="chapter-inner">
+      <div class="bento">
+        <article class="fig span-5">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 13</div>
+              <h3>CMS overall star rating</h3>
+              <p class="sub">Share of rated hospitals by star rating. Choose a state in the bar above to compare it with the nation.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-ovr"></div>
+        </article>
+        <article class="fig span-7">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 14</div>
+              <h3>Time spent in the emergency department, by state</h3>
+              <p class="sub">Median of each state’s hospitals, in minutes from arrival to leaving, for patients sent home (CMS OP‑18b). Blue is faster than the national median and orange slower. Click a state to focus on it.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-ed"></div>
+        </article>
+        <article class="card span-7">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 15</div>
+              <h3>Death and readmission rates vary widely between hospitals</h3>
+              <p class="sub">Risk‑standardised 30‑day rates for Medicare patients, by condition.</p>
+            </div>
+          </div>
+          <div class="chips" id="chips-outcome" role="group" aria-label="Outcome"></div>
+          <div class="chart" id="fig-outcome"></div>
+          <p class="fig-note" id="outcomeNote"></p>
+        </article>
+        <article class="card span-5">
+          <div class="card-head">
+            <div>
+              <div class="eyebrow">Fig 16</div>
+              <h3>Hospitals with Medicare payment cuts</h3>
+              <p class="sub">Hospitals with reduced Medicare payments under CMS’s two penalty programs, latest fiscal year.</p>
+            </div>
+          </div>
+          <div class="chart" id="fig-pen"></div>
+        </article>
+      </div>
+      </div></div>
+    </section>
+
+    <!-- 09 Explorer -->
+    <section id="explorer" class="chapter" data-num="09" data-label="Explorer">
+      <header class="chapter-head">
+        <button type="button" class="chapter-act" aria-expanded="true" aria-controls="explorer-body"><span class="chapter-act-label">Hide</span><span class="sr-only"> section 09</span><svg class="chapter-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="chapter-stick">
+          <h2 class="chapter-title"><button type="button" class="chapter-toggle" aria-expanded="true" aria-controls="explorer-body"><span class="sr-only">09 </span><span class="chapter-name">Find a hospital</span></button></h2>
+          <div class="chapter-lede"><div><p>Search <b data-fact="nFac"></b> hospitals on infections, patient experience and safety. <b data-fact="leaders"></b> are marked <span class="leader-tag">Leader</span>: five‑star patient experience, PSI‑90 below 1.0 and no infection worse than benchmark.</p></div></div>
+        </div>
+      </header>
+      <div class="chapter-body" id="explorer-body"><div class="chapter-inner">
+      <article class="card span-12 explorer-card">
+        <div class="explorer-controls">
+          <div class="search wide">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="exSearch" type="search" placeholder="Hospital, city or CCN…" autocomplete="off" aria-label="Search hospitals" />
+          </div>
+          <div class="chips" id="chips-star" role="group" aria-label="Star rating"></div>
+          <label class="check-label">
+            <input type="checkbox" class="check" id="exLeaders" />
+            Leaders only
+          </label>
+          <span class="ex-count" id="exCount"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="ex-table" id="exTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button type="button" id="exPrev" class="btn">Previous</button>
+          <span id="exPage"></span>
+          <button type="button" id="exNext" class="btn">Next</button>
+        </div>
+      </article>
+      </div></div>
+    </section>
+    </div>
+    </div>
+  </main>
+
+  <!-- Insights and takeaways: the written briefing (assets/js/insights.js) -->
+  <main id="view-insights" class="view ins" role="tabpanel" aria-labelledby="tab-insights" hidden>
+    <section id="insights" class="hero ins-hero">
+      <h1 class="headline">The state of patient safety, 2019–2025</h1>
+      <p class="lede">Thirteen findings from CMS public hospital-quality reporting, spanning the PSI 90 safety composite, CDC standardized infection ratios, and HCAHPS patient experience. Each names what moved, by how much, and what it means for the teams accountable for safe care.</p>
+    </section>
+    <section class="ins-body" aria-label="Findings">
+      <nav class="ins-toc" id="insToc" aria-label="Findings"></nav>
+      <div class="ins-findings" id="insFindings"></div>
+    </section>
+  </main>
+
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <h4>About the data</h4>
+        <p>Source: CMS Care Compare hospital data from CMS’s public archive, as tables <code>HAI</code>, <code>HCAHPS</code> and <code>PSI90</code> (one row per hospital and report year) built by <code>build_core_tables.py</code>, either read directly or queried with DAX from a Fabric semantic model <b>CMS</b>. For demonstration only: every figure depends on the source data.</p>
+        <p id="extraNote">The outcomes section (overall star rating, mortality, readmissions, emergency department times and Medicare penalties) and the maternity section use CMS Care Compare, Provider of Services and cost‑report files plus U.S. Census data, built locally by <code>build_quality_extra.py</code> and <code>build_maternity.py</code>. They can also be published to the Fabric semantic model <b>CMS V2</b> (lakehouse <code>lh_cms_v2</code>) by <code>publish_fabric.py</code>.</p>
+        <p id="locationNote"></p>
+        <p id="periodNote"></p>
+      </div>
+      <div>
+        <h4>Method notes</h4>
+        <ul>
+          <li>National and state SIRs are pooled: Σ observed ÷ Σ predicted infections across reporting hospitals.</li>
+          <li>“Better or worse than benchmark” compares each hospital’s 95% confidence interval with SIR 1.0 (2015 baseline).</li>
+          <li>Funnel limits use exact Poisson quantiles with Spiegelhalter interpolation.</li>
+          <li>HCAHPS 2025 omits staff responsiveness and care transition; PSI hip‑fracture and haemorrhage measures changed definitions and are excluded from trend comparisons.</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+
+  <script src="assets/vendor/d3.min.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/hospital-locations.js"></script>
+  <script src="assets/quality-extra.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/extra-data.js"></script>
+  <script src="assets/js/infections.js"></script>
+  <script src="assets/js/benchmark.js"></script>
+  <script src="assets/js/geography.js"></script>
+  <script src="assets/js/hospital-map.js"></script>
+  <script src="assets/js/experience.js"></script>
+  <script src="assets/js/safety.js"></script>
+  <script src="assets/js/outcomes.js"></script>
+  <script src="assets/js/explorer.js"></script>
+  <script src="assets/js/maternity.js"></script>
+  <script src="assets/js/overview.js"></script>
+  <script src="assets/js/insights.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/verification.js"></script>
+  <script src="assets/js/explain-fig1.js"></script>
+</body>
+</html>

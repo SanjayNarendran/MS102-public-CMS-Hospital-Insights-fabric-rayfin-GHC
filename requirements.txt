@@ -1,0 +1,7 @@
+# Data build (build_all.py)
+numpy>=1.24
+pillow>=10
+scipy>=1.10
+
+# Only for publish_fabric.py (loading the tables into Microsoft Fabric)
+pyarrow>=14
