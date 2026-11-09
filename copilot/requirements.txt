@@ -1,0 +1,7 @@
+# The Copilot backend for Ask your data and the side panel (copilot/server.py), locally and in the relay image.
+github-copilot-sdk==1.0.28   # downloads the matching Copilot CLI runtime on first run
+starlette==1.10.0
+uvicorn==0.54.0
+httpx==0.28.1
+vl-convert-python==1.9.0.post1  # validates render_visual Vega-Lite specs (bundles Vega 6.2 / Vega-Lite 6.4)
+duckdb==2.0.0                # chat history for the local server (copilot/history.py); unused by the relay

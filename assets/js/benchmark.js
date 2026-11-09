@@ -33,7 +33,7 @@
     const inf = App.infByKey[k];
     const pts = App.facilities.filter((f) => f[k] && f[k].sir != null && f[k].pred > 0);
     const counts = d3.rollup(pts, (v) => v.length, (f) => f[k].cls);
-    document.getElementById('funnelLegend').innerHTML =
+    document.getElementById('funnelLegend').innerHTML = '<span class="lg-k">CMS verdict</span>' +
       `<span><i class="sw good"></i>Better <b>${App.f0(counts.get('better') || 0)}</b></span>` +
       `<span><i class="sw neutral"></i>No different <b>${App.f0(counts.get('similar') || 0)}</b></span>` +
       `<span><i class="sw bad"></i>Worse <b>${App.f0(counts.get('worse') || 0)}</b></span>`;
@@ -57,8 +57,11 @@
       svg.append('line').attr('x1', x(t)).attr('x2', x(t)).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', C.grid);
       svg.append('text').attr('x', x(t)).attr('y', H - m.b + 16).attr('text-anchor', 'middle').attr('font-size', 10.5).attr('fill', C.muted).text(d3.format('~s')(t));
     });
-    svg.append('text').attr('x', (m.l + w - m.r) / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', C.muted).text('Predicted infections (log scale), a proxy for hospital size and exposure');
-    svg.append('text').attr('transform', `translate(13,${(m.t + H - m.b) / 2}) rotate(-90)`).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', C.muted).text('SIR');
+    const narrow = w < 640;
+    svg.append('text').attr('x', (m.l + w - m.r) / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', C.muted)
+      .text(narrow ? 'Infections predicted (log scale) · bigger hospitals to the right' : 'Infections predicted for the hospital, a measure of its size and patients (log scale) · bigger hospitals to the right');
+    svg.append('text').attr('transform', `translate(13,${(m.t + H - m.b) / 2}) rotate(-90)`).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', C.muted)
+      .text('Infection ratio (SIR) · 1.0 = as many as predicted');
 
     const grid = d3.range(0, 161).map((i) => Math.exp(Math.log(x.domain()[0]) + (i / 160) * (Math.log(x.domain()[1]) - Math.log(x.domain()[0]))));
     const lim = grid.map((E) => ({ E, l95: poissonLimit(0.025, E), u95: poissonLimit(0.975, E), l998: poissonLimit(0.001, E), u998: poissonLimit(0.999, E) }));
@@ -105,6 +108,41 @@
       const hw = d3.rollup(hits, (v) => v.length, (f) => f[k].cls);
       svg.append('text').attr('x', m.l + 8).attr('y', m.t + 14).attr('font-size', 11.5).attr('font-weight', 600).attr('fill', C.text)
         .text(`${focus ? App.STATE_NAMES[focus] || focus : 'Matches'}: ${App.f0(hits.length)} hospitals · ${hw.get('worse') || 0} worse · ${hw.get('better') || 0} better`);
+    }
+    // ---- How to read it, marked on the chart (left out while a search or state is highlighted, to keep the matches clear)
+    if (!anyFilter) {
+      const note = (x0, y0, text, o = {}) => svg.append('text').attr('x', x0).attr('y', y0).attr('text-anchor', o.anchor || 'start')
+        .attr('font-size', o.size || 10.5).attr('font-weight', o.weight || 400).attr('fill', o.fill || C.text2).attr('pointer-events', 'none')
+        .attr('paint-order', 'stroke').attr('stroke', C.surface).attr('stroke-width', 3.5).attr('stroke-linejoin', 'round').text(text);
+      const [E0, E1] = x.domain();
+      const atE = (t) => Math.exp(Math.log(E0) + t * (Math.log(E1) - Math.log(E0)));
+      // The funnel: what it is, and why it narrows, with a line to its upper edge
+      const Ef = atE(0.62), edge = poissonLimit(0.975, Ef), top998 = poissonLimit(0.999, Ef);
+      const fx = x(Ef), fy = y(Math.min(edge, yTop));
+      const ty = Math.max(m.t + 56, y(Math.min(top998, yTop)) - (narrow ? 22 : 40));
+      svg.append('line').attr('x1', fx).attr('x2', fx).attr('y1', ty + 5).attr('y2', fy - 2).attr('stroke', C.text2).attr('stroke-width', 1).attr('pointer-events', 'none');
+      svg.append('circle').attr('cx', fx).attr('cy', fy).attr('r', 2.2).attr('fill', C.text2).attr('pointer-events', 'none');
+      note(fx, ty - (narrow ? 0 : 14), 'The shaded funnel is the range chance alone explains', { anchor: 'middle', weight: 600, fill: C.text });
+      if (!narrow) note(fx, ty, 'It narrows to the right, where bigger hospitals have steadier numbers', { anchor: 'middle' });
+      // Above and below the funnel
+      note(w - m.r - 6, m.t + 16, 'Above the funnel · more infections than chance explains', { anchor: 'end', weight: 600, fill: C.text });
+      note(w - m.r - 6, y(0) - 8, 'Below the funnel · fewer than chance explains', { anchor: 'end', weight: 600, fill: C.text });
+      // The dotted line, explained where it ends on the right: the stricter 99.8% limit, which chance alone takes a
+      // hospital past about 1 time in 1,000 (the funnel's edge, about 1 in 40)
+      const Ed = atE(0.97), dx = x(Ed) - 4, dy = y(Math.min(poissonLimit(0.999, Ed), yTop));
+      if (narrow) note(dx, dy - 6, 'Dotted line · past it 1 time in 1,000 by chance', { anchor: 'end', size: 10 });
+      else {
+        note(dx, dy - 34, 'The dotted line is a stricter bar', { anchor: 'end', weight: 600, fill: C.text });
+        note(dx, dy - 20, 'Chance alone puts a hospital above it', { anchor: 'end' });
+        note(dx, dy - 6, 'only about 1 time in 1,000', { anchor: 'end' });
+      }
+      // Dots fall on curves because infections are counted in whole numbers: name the first few
+      const Ec = E0 * 1.04;
+      note(x(Ec) + 2, y(0) - 7, '0 infections', { size: 10, fill: C.muted });
+      [1, 2, 3].forEach((n) => {
+        if (n / Ec > yTop * 0.86) return;
+        note(x(Ec) + 2, y(n / Ec) - 7, n === 1 ? '1 infection' : `${n} infections`, { size: 10, fill: C.muted });
+      });
     }
     const over = pts.filter((f) => f[k].sir > yTop).length;
     if (over) svg.append('text').attr('x', m.l + 8).attr('y', y(yTop) + (anyFilter ? 30 : 14)).attr('font-size', 10).attr('fill', C.muted).text(`${over} hospital${over > 1 ? 's' : ''} above ${yTop.toFixed(1)} shown at top edge`);

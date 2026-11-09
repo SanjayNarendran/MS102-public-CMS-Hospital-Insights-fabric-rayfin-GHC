@@ -193,7 +193,18 @@
   // The contents rail (wide screens): every section's number and short name; the section you're reading expands to its
   // title and description. Those are copies of the section's own (which stay in the section for screen readers and for
   // narrow screens, where the rail is just the numbers), kept in step as facts and the maternity headline fill in.
-  const RAIL_MQ = window.matchMedia('(min-width: 1100px)');
+  // Wide enough for the rail: the page's own width (it narrows beside the quick chat), like the CSS container queries
+  const RAIL_MQ = (() => {
+    const page = document.getElementById('page'), fns = new Set();
+    const q = { matches: false, addEventListener: (_, fn) => fns.add(fn) };
+    const check = () => {
+      const m = (page ? page.clientWidth : window.innerWidth) >= 1100;
+      if (m !== q.matches) { q.matches = m; fns.forEach((fn) => fn()); }
+    };
+    check();
+    if (page && window.ResizeObserver) new ResizeObserver(check).observe(page); else window.addEventListener('resize', check);
+    return q;
+  })();
   function buildRail(chapters) {
     const toc = document.getElementById('qToc');
     if (!toc) return;
@@ -276,37 +287,43 @@
     queue();
   }
 
+  // Charts redraw when the page's width changes: the window resizing, or the page narrowing beside the quick chat
   function initResize() {
-    let lastW = window.innerWidth, t;
-    window.addEventListener('resize', () => {
+    const page = document.getElementById('page');
+    const width = () => (page ? page.clientWidth : window.innerWidth);
+    let lastW = width(), t;
+    const changed = () => {
       clearTimeout(t);
       t = setTimeout(() => {
-        if (window.innerWidth === lastW) return;
-        lastW = window.innerWidth;
+        if (width() === lastW) return;
+        lastW = width();
         App.renderAll(false);
       }, 160);
-    });
+    };
+    if (page && window.ResizeObserver) new ResizeObserver(changed).observe(page);
+    else window.addEventListener('resize', changed);
   }
 
   // Three views share the top bar: the overview, the Quality & safety dashboard and the written insights. The URL hash
   // picks the view, so links, reloads and the back button all land on the right one; switching cross-fades and the tab
   // underline slides across.
-  const SOURCE = { overview: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog'], quality: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog, plus Census and OpenStreetMap'], insights: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog'] };
+  const SOURCE = { overview: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog'], quality: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog, plus Census and OpenStreetMap'], insights: ['CMS Care Compare', 'Public data from the CMS Provider Data Catalog'], ask: ['CMS Care Compare', 'Answers by GitHub Copilot from the CMS and CMS V2 semantic models in your Fabric workspace'] };
   function initViews() {
     const tabs = [...document.querySelectorAll('.view-tab')];
-    const views = { overview: document.getElementById('view-overview'), quality: document.getElementById('view-quality'), insights: document.getElementById('view-insights') };
+    const views = { overview: document.getElementById('view-overview'), quality: document.getElementById('view-quality'), insights: document.getElementById('view-insights'), ask: document.getElementById('view-ask') };
     const ink = document.querySelector('.view-tab-ink');
     if (!tabs.length) return;
     let current = '';
     const viewFor = (hash) => {
       if (!hash || hash === '#' || hash === '#overview' || /^#ov-/.test(hash)) return 'overview';
       if (/^#insight/.test(hash)) return 'insights';
+      if (hash === '#ask') return 'ask';
       return 'quality';
     };
     // A link into the middle of a view (a section or a finding), rather than to the view itself
     const deepTarget = () => {
       let id = decodeURIComponent(location.hash.slice(1));
-      if (!id || ['overview', 'quality', 'insights'].includes(id)) return null;
+      if (!id || ['overview', 'quality', 'insights', 'ask'].includes(id)) return null;
       // Links saved from the old Maternity care tab open its map, now section 04
       if (/^mat-/.test(id)) id = 'maternity';
       return document.getElementById(id);
@@ -327,7 +344,7 @@
       moveInk();
       App.tip.hide();
       // Charts measure their container, so a view's charts draw (or redraw at its real width) as it is shown
-      if (name !== 'overview') App.renderAll(false);
+      if (name !== 'overview' && name !== 'ask') App.renderAll(false);
       if (App.trackSections) App.trackSections();
       if (App.scrollspy) App.scrollspy();
     };

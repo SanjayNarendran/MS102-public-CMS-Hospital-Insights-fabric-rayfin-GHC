@@ -88,7 +88,12 @@
     if (!anim && el.__ed && el.__ed.key === key) { el.__ed.focus(App.state.focus, 250); return; }
     const data = Object.entries(X.states).filter(([c, s]) => s.ed != null && s.edN >= 5 && App.STATE_NAMES[c]).map(([c, s]) => ({ c, v: s.ed, n: s.edN }))
       .sort((a, b) => a.v - b.v);
-    const H = 300, m = { t: 22, r: 8, b: 34, l: 40 };
+    // Every state is named: side by side where the columns are wide enough, on two staggered rows where they aren't,
+    // and upright on a very narrow chart
+    const LABEL_W = 15;
+    const w0 = el.clientWidth || 600, step0 = (w0 - 48) / data.length;
+    const mode = step0 >= LABEL_W ? 'row' : step0 * 2 >= LABEL_W ? 'stagger' : 'upright';
+    const H = 300 + (mode === 'row' ? 0 : 14), m = { t: 22, r: 8, b: mode === 'row' ? 34 : 48, l: 40 };
     const [svg, w] = App.makeSvg(el, H, 'Column chart: median emergency department time by state');
     const x = d3.scaleBand().domain(data.map((d) => d.c)).range([m.l, w - m.r]).padding(0.22);
     const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d.v) * 1.08]).range([H - m.b, m.t]).nice();
@@ -105,20 +110,21 @@
     bars.attr('y', y(0)).attr('height', 0).transition().duration(dur).delay((d, i) => i * 8).attr('y', (d) => y(d.v)).attr('height', (d) => y(0) - y(d.v));
     svg.append('line').attr('x1', m.l).attr('x2', w - m.r).attr('y1', y(N.ed.median)).attr('y2', y(N.ed.median)).attr('stroke', C.text).attr('stroke-dasharray', '4 3').attr('stroke-opacity', 0.7);
     svg.append('text').attr('x', m.l + 6).attr('y', y(N.ed.median) - 6).attr('font-size', 10.5).attr('font-weight', 600).attr('fill', C.text2).text(`National hospital median ${App.fmtMin(N.ed.median)}`);
-    const every = x.bandwidth() < 12 ? 2 : 1;
-    const labels = svg.selectAll('text.xl').data(data).join('text').attr('class', 'xl').attr('font-size', 9).attr('text-anchor', 'middle')
-      .attr('transform', (d) => `translate(${x(d.c) + x.bandwidth() / 2},${H - m.b + 12})`);
+    const cx = (d) => x(d.c) + x.bandwidth() / 2, lower = (i) => mode === 'stagger' && i % 2 === 1;
+    // A short tick ties each label on the lower row to its column
+    if (mode === 'stagger') {
+      svg.selectAll('line.xt').data(data.filter((d, i) => lower(i))).join('line').attr('class', 'xt')
+        .attr('x1', cx).attr('x2', cx).attr('y1', H - m.b + 3).attr('y2', H - m.b + 15).attr('stroke', C.grid);
+    }
+    const labels = svg.selectAll('text.xl').data(data).join('text').attr('class', 'xl').attr('font-size', 9.5)
+      .attr('text-anchor', mode === 'upright' ? 'end' : 'middle').attr('dy', mode === 'upright' ? '0.32em' : null)
+      .attr('transform', (d, i) => (mode === 'upright' ? `translate(${cx(d)},${H - m.b + 6}) rotate(-90)` : `translate(${cx(d)},${H - m.b + (lower(i) ? 26 : 12)})`))
+      .text((d) => d.c);
     const focus = (f, ms) => {
       const fi = data.findIndex((d) => d.c === f);
       bars.transition('focus').duration(ms).ease(d3.easeCubicOut)
         .attr('fill-opacity', (d) => (fi >= 0 && d.c !== f ? 0.55 : 1)).attr('stroke-opacity', (d) => (d.c === f ? 1 : 0));
-      // The focused state always gets its label; its immediate neighbours give way so the labels don't collide
-      labels.attr('fill', (d) => (d.c === f ? C.text : C.muted)).attr('font-weight', (d) => (d.c === f ? 700 : 400))
-        .text((d, i) => {
-          if (d.c === f) return d.c;
-          if (fi >= 0 && Math.abs(i - fi) <= (every === 1 ? 1 : 2)) return '';
-          return i % every === 0 ? d.c : '';
-        });
+      labels.attr('fill', (d) => (d.c === f ? C.text : C.muted)).attr('font-weight', (d) => (d.c === f ? 700 : 400));
     };
     focus(App.state.focus, 0);
     const tip = (d) => `<div class="tt-title">${App.STATE_NAMES[d.c]}</div><div class="tt-sub">Median of ${App.f0(d.n)} hospitals · ${App.state.focus === d.c ? 'click to show all states' : 'click to focus'}</div>` +

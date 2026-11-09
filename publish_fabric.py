@@ -8,7 +8,8 @@ itself runs from the files in assets/ and does not need these).
     (or set FABRIC_WORKSPACE_ID instead of passing --workspace)
 
   --core  data/core/{hai,hcahps,psi90}.csv (build_core_tables.py) -> lakehouse lh_cms_core -> semantic model "CMS" with
-          tables HAI, HCAHPS and PSI90. Columns are renamed to the names refresh_data.py queries, so afterwards
+          tables HAI, HCAHPS and PSI90, related one-to-one on FACILITYYEARKEY (CCN + report year). Columns are renamed
+          to the names refresh_data.py queries, so afterwards
               python3 refresh_data.py --workspace <workspace-guid> --model <id printed below>
           rebuilds assets/data.js from the model (identical to refresh_data.py --local).
   --v2    data/fabric/*.csv (build_quality_extra.py, build_maternity.py) -> lakehouse lh_cms_v2 -> semantic model "CMS V2"
@@ -32,6 +33,7 @@ import urllib.request
 import uuid
 
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.csv as pcsv
 import pyarrow.parquet as pq
 
@@ -120,12 +122,21 @@ def core_tables():
     desc = {"hai": "CMS Healthcare-Associated Infections (CDC NHSN): SIR, observed and predicted cases, confidence limits and exposure, one row per hospital per report year.",
             "hcahps": "CMS HCAHPS patient survey: summary star rating and linear mean scores, one row per hospital per report year.",
             "psi90": "CMS PSI-90 patient safety composite and component rates, one row per hospital per report year."}
-    return {t: {"desc": desc[t], "model": MODEL_TABLE[t], "cols": [(c, types.get(c, D)) for c, _ in column_names(t)],
-                "names": dict(column_names(t))} for t in ("hai", "hcahps", "psi90")}
+    # FACILITYYEARKEY (CCN + report year) is made while loading; the three tables relate on it (CORE_RELATIONSHIPS)
+    return {t: {"desc": desc[t], "model": MODEL_TABLE[t], "cols": [(c, types.get(c, D)) for c, _ in column_names(t)] + [("facility_year_key", S)],
+                "names": {**dict(column_names(t)), "facility_year_key": "FACILITYYEARKEY"},
+                "derived": {"facility_year_key": ("facility_id", "report_year")}} for t in ("hai", "hcahps", "psi90")}
+
+
+# One row per hospital and report year in each table, so PSI90 relates one-to-one (both ways) to HAI and to HCAHPS
+CORE_RELATIONSHIPS = [
+    ("PSI90", "FACILITYYEARKEY", "HAI", "FACILITYYEARKEY", {"fromCardinality": "one", "crossFilteringBehavior": "bothDirections"}),
+    ("PSI90", "FACILITYYEARKEY", "HCAHPS", "FACILITYYEARKEY", {"fromCardinality": "one", "crossFilteringBehavior": "bothDirections"}),
+]
 
 
 SETS = {
-    "core": {"dir": os.path.join(ROOT, "data", "core"), "lakehouse": "lh_cms_core", "model": "CMS", "tables": core_tables, "relationships": [], "measures": {},
+    "core": {"dir": os.path.join(ROOT, "data", "core"), "lakehouse": "lh_cms_core", "model": "CMS", "tables": core_tables, "relationships": CORE_RELATIONSHIPS, "measures": {},
              "lh_desc": "CMS hospital quality core tables: infections (HAI), patient survey (HCAHPS) and PSI-90, from CMS's public archive.",
              "model_desc": "CMS hospital quality: infections, patient experience and PSI-90 by hospital and report year (public CMS data).",
              "check": 'EVALUATE ROW("hai", COUNTROWS(HAI), "hcahps", COUNTROWS(HCAHPS), "psi90", COUNTROWS(PSI90), "latest", MAX(HAI[REPORTYEAR]))'},
@@ -210,13 +221,16 @@ def upload(lh_id, folder, name, data, stok):
 
 
 def to_parquet(folder, table, spec):
-    cols = spec["cols"]
+    derived = spec.get("derived", {})
+    cols = [(c, k) for c, k in spec["cols"] if c not in derived]
     path = os.path.join(folder, f"{table}.csv")
     if not os.path.exists(path):
         raise SystemExit(f"Missing {os.path.relpath(path, ROOT)}; build it first (see AGENTS.md).")
     t = pcsv.read_csv(path,
                       convert_options=pcsv.ConvertOptions(column_types={c: ARROW[k] for c, k in cols}, strings_can_be_null=False,
                                                           null_values=[""], include_columns=[c for c, _ in cols]))
+    for c, (fid, year) in derived.items():
+        t = t.append_column(c, pc.binary_join_element_wise(t[fid], pc.cast(t[year], pa.string()), ""))
     buf = io.BytesIO()
     pq.write_table(t, buf, compression="snappy")
     return buf.getvalue(), t.num_rows
@@ -256,8 +270,9 @@ def tmdl(lh, cfg, tables):
                   "\t\t\texpressionSource: DatabaseQuery", ""]
         parts[f"definition/tables/{t}.tmdl"] = "\n".join(lines)
     rel = []
-    for ft, fc, tt, tc in cfg["relationships"]:
-        rel += [f"relationship {tag('rel', ft, fc, tt)}", f"\tfromColumn: {ft}.{fc}", f"\ttoColumn: {tt}.{tc}", ""]
+    for ft, fc, tt, tc, *extra in cfg["relationships"]:
+        props = [f"\t{k}: {v}" for k, v in (extra[0] if extra else {}).items()]
+        rel += [f"relationship {tag('rel', ft, fc, tt)}", *props, f"\tfromColumn: {ft}.{fc}", f"\ttoColumn: {tt}.{tc}", ""]
     parts["definition/relationships.tmdl"] = "\n".join(rel)
     return {"parts": [{"path": p, "payload": base64.b64encode(v.encode()).decode(), "payloadType": "InlineBase64"} for p, v in parts.items()]}
 

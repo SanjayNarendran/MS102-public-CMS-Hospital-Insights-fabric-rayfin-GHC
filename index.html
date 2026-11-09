@@ -10,8 +10,12 @@
   <link rel="stylesheet" href="assets/fonts.css" />
   <link rel="stylesheet" href="assets/vendor/maplibre/maplibre-gl.css" />
   <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/figures/figures.css" />
+  <link rel="stylesheet" href="assets/chat.css" />
 </head>
 <body>
+  <!-- The page: lays itself out by its own width (container queries), so it narrows cleanly beside the quick chat -->
+  <div class="page" id="page">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="#overview" aria-label="Hospital Quality, overview">
@@ -21,12 +25,14 @@
       </a>
       <div class="view-tabs" role="tablist" aria-label="Dashboard">
         <a class="view-tab" role="tab" id="tab-overview" href="#overview" data-view="overview" aria-controls="view-overview">Overview</a>
-        <a class="view-tab" role="tab" id="tab-quality" href="#quality" data-view="quality" aria-controls="view-quality">Quality &amp; safety</a>
-        <a class="view-tab" role="tab" id="tab-insights" href="#insights" data-view="insights" aria-controls="view-insights">Insights and takeaways</a>
+        <a class="view-tab" role="tab" id="tab-quality" href="#quality" data-view="quality" aria-controls="view-quality" aria-label="Quality &amp; safety">Quality<span class="vt-more"> &amp; safety</span></a>
+        <a class="view-tab" role="tab" id="tab-insights" href="#insights" data-view="insights" aria-controls="view-insights" aria-label="Insights and takeaways">Insights<span class="vt-more"> and takeaways</span></a>
+        <a class="view-tab" role="tab" id="tab-ask" href="#ask" data-view="ask" aria-controls="view-ask" aria-label="Ask your data" hidden>Ask<span class="vt-more"> your data</span></a>
         <span class="view-tab-ink" aria-hidden="true"></span>
       </div>
       <div class="actions">
         <span class="source-id mono" id="sourceId" title="Public data from the CMS Provider Data Catalog">CMS Care Compare</span>
+        <button type="button" class="qc-launch" id="qcLaunch" data-chat-only hidden aria-controls="sideChat" aria-expanded="false" title="Quick chat: ask Copilot beside the dashboard"><svg class="cp-mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M7.998 15.035c-4.562 0-7.873-2.914-7.998-3.749V9.338c.085-.628.677-1.686 1.588-2.065.013-.07.024-.143.036-.218.029-.183.06-.384.126-.612-.201-.508-.254-1.084-.254-1.656 0-.87.128-1.769.693-2.484.579-.733 1.494-1.124 2.724-1.261 1.206-.134 2.262.034 2.944.765.05.053.096.108.139.165.044-.057.094-.112.143-.165.682-.731 1.738-.899 2.944-.765 1.23.137 2.145.528 2.724 1.261.566.715.693 1.614.693 2.484 0 .572-.053 1.148-.254 1.656.066.228.098.429.126.612.012.076.024.148.037.218.924.385 1.522 1.471 1.591 2.095v1.872c0 .766-3.351 3.795-8.002 3.795Zm0-1.485c2.28 0 4.584-1.11 5.002-1.433V7.862l-.023-.116c-.49.21-1.075.291-1.727.291-1.146 0-2.059-.327-2.71-.991A3.222 3.222 0 0 1 8 6.303a3.24 3.24 0 0 1-.544.743c-.65.664-1.563.991-2.71.991-.652 0-1.236-.081-1.727-.291l-.023.116v4.255c.419.323 2.722 1.433 5.002 1.433ZM6.762 2.83c-.193-.206-.637-.413-1.682-.297-1.019.113-1.479.404-1.713.7-.247.312-.369.789-.369 1.554 0 .793.129 1.171.308 1.371.162.181.519.379 1.442.379.853 0 1.339-.235 1.638-.54.315-.322.527-.827.617-1.553.117-.935-.037-1.395-.241-1.614Zm4.155-.297c-1.044-.116-1.488.091-1.681.297-.204.219-.359.679-.242 1.614.091.726.303 1.231.618 1.553.299.305.784.54 1.638.54.922 0 1.28-.198 1.442-.379.179-.2.308-.578.308-1.371 0-.765-.123-1.242-.37-1.554-.233-.296-.693-.587-1.713-.7Z"/><path d="M6.25 9.037a.75.75 0 0 1 .75.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 .75-.75Zm4.25.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 1.5 0Z"/></svg><span>Quick chat</span></button>
         <div class="seg" id="themeSeg" role="group" aria-label="Colour theme">
           <button type="button" data-theme-set="light" aria-pressed="true">Light</button>
           <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
@@ -57,7 +63,7 @@
     <section class="doc-sec" id="ov-contents">
       <div class="doc-head">
         <h2>What’s in the dashboard</h2>
-        <p>Two views of the same data: a dashboard to explore and a written briefing to read.</p>
+        <p>A dashboard to explore and a written briefing to read, built on the same data.</p>
       </div>
       <div class="doc-body">
         <div class="ov-tab">
@@ -71,6 +77,12 @@
           <div class="ov-tab-head">
             <h3><a href="#insights">Insights and takeaways</a></h3>
             <p><span id="ovInsightCount">Thirteen</span> findings for clinical and operational leaders. Each names what moved, by how much, and what it means for the teams delivering care, with the trend behind it and an executive takeaway.</p>
+          </div>
+        </div>
+        <div class="ov-tab" data-chat-only hidden>
+          <div class="ov-tab-head">
+            <h3><a href="#ask">Ask your data</a></h3>
+            <p>Ask about infections, patient experience, safety, outcomes, penalties or maternity care in your own words, and GitHub Copilot answers from the semantic models CMS and CMS V2 with figures and a short reading of each. Where one of the dashboard’s charts fits the question, it is redrawn for it. On the dashboard, right-click a chart or a number to ask about it in Quick chat, a panel beside the page. Every chat is saved, in folders you can arrange, and can be reopened and continued. <a class="ov-more" href="#ov-notes">About the data and methods</a></p>
           </div>
         </div>
       </div>
@@ -110,6 +122,7 @@
           <div><dt>Semantic model CMS</dt><dd>Tables <span class="mono">HAI</span>, <span class="mono">HCAHPS</span> and <span class="mono">PSI90</span> (infections, patient experience and patient safety) in the lakehouse <span class="mono">lh_cms_core</span>, served through Direct Lake and queried with DAX (optional: the same numbers can be built locally)</dd></div>
           <div><dt>Semantic model CMS V2</dt><dd>Outcomes and maternity tables in the lakehouse <span class="mono">lh_cms_v2</span>, served through Direct Lake</dd></div>
           <div><dt>Fabric App</dt><dd>This dashboard, hosted with Rayfin static hosting; viewers sign in with their Fabric account</dd></div>
+          <div data-chat-only hidden><dt>Ask your data</dt><dd>GitHub Copilot, running in Azure Container Apps on each viewer’s own Copilot plan after a GitHub sign-in. Its DAX queries on CMS and CMS V2 run in the app’s Rayfin Functions</dd></div>
           <div><dt>Live services</dt><dd>Map tiles, road routing and address lookup are fetched while you use the maps; your location stays in the browser</dd></div>
         </dl>
       </div>
@@ -213,11 +226,11 @@
       <div class="chapter-body" id="benchmark-body"><div class="chapter-inner">
       <div class="bento">
         <article class="card span-12">
-          <div class="card-head">
+          <div class="card-head wide-sub">
             <div>
               <div class="eyebrow">Fig 4</div>
-              <h3>SIR against predicted infections for every hospital, 2025 report</h3>
-              <p class="sub">The shaded band is the 95% Poisson control limit around SIR 1.0 and the dashed line is 99.8%. Colour is the CMS classification from each hospital’s own 95% CI.</p>
+              <h3>Hospitals outside the funnel have more or fewer infections than chance explains, 2025 report</h3>
+              <p class="sub">Each dot is a hospital. Its infection ratio is the infections it had divided by the number predicted for its size and patients, so 1.0 means as many as predicted. A hospital that expects few infections can land far from 1.0 by chance, because one infection more or less moves its ratio a lot. The shaded funnel shows how far chance alone can take a hospital of each size, so it is wide for small hospitals on the left and narrows for large ones on the right. Dots above it had more infections than chance explains, and dots below it fewer. Colour is CMS’s own verdict for each hospital.</p>
             </div>
             <div class="search">
               <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -640,7 +653,88 @@
   </main>
 
 
-  <footer class="footer">
+  <!-- Ask your data: questions answered by GitHub Copilot with figures (assets/js/chat/, copilot/server.py) -->
+  <main id="view-ask" class="view ask" role="tabpanel" aria-labelledby="tab-ask" hidden>
+    <section id="ask" class="hero ask-hero">
+      <!-- A minimal band: the title and who Copilot runs as, then the roles on its rule. What Copilot answers, and the
+           notes on the data and methods, are on the Overview. -->
+      <div class="ask-band">
+        <div class="ask-band-top">
+          <h1 class="headline">Ask your data</h1>
+          <div class="ask-cta" id="askReady" hidden>
+            <div class="ask-account" id="askAccount"></div>
+            <button type="button" class="btn" id="askNew">New conversation</button>
+            <button type="button" class="btn hs-open" id="hsOpen" aria-controls="askSide" aria-expanded="false">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.7"/></svg>Your chats
+            </button>
+          </div>
+        </div>
+        <p class="ask-unavailable" id="askUnavailable" hidden>Ask your data needs the Copilot service. Run <code>python3 copilot/server.py</code> and open the address it prints, or open the dashboard in Fabric.</p>
+        <!-- Who the suggested questions are for; they fold away once the conversation starts -->
+        <div class="ask-fold" id="askRolesFold">
+          <div class="ask-fold-in"><div class="ask-roles" id="askRoles" role="group" aria-label="Suggested questions for"></div></div>
+        </div>
+      </div>
+    </section>
+    <div class="ask-shell" id="askShell">
+    <!-- Your chats: saved with their answers, in folders, with an archive (assets/js/chat/history.js) -->
+    <aside class="ask-side" id="askSide" aria-label="Your chats" hidden>
+      <div class="hs-in">
+      <div class="hs-head">
+        <span class="hs-label">Your chats</span>
+        <div class="hs-tools">
+          <button type="button" class="sc-icon" id="hsFolderNew" title="New folder" aria-label="New folder">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-10ZM12 11v5M9.5 13.5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="sc-icon" id="hsCollapse" title="Hide your chats" aria-label="Hide your chats" aria-controls="askSide" aria-expanded="true">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.7"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="button" class="hs-new" id="hsNew"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>New chat</button>
+      <label class="hs-search"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input type="search" id="hsSearch" placeholder="Search chats" aria-label="Search chats" autocomplete="off" /></label>
+      <div class="hs-tree" id="hsTree" role="tree" aria-label="Chats"></div>
+      <div class="hs-arch">
+        <button type="button" class="hs-arch-toggle" id="hsArchToggle" aria-expanded="false" aria-controls="hsArchive"><span>Archive</span><span class="hs-count" id="hsArchCount"></span><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="hs-tree hs-archive" id="hsArchive" role="tree" aria-label="Archived chats" hidden></div>
+      </div>
+      </div>
+    </aside>
+    <!-- With the list hidden: show it, or start a new chat -->
+    <div class="hs-rail" id="hsRail" hidden>
+      <button type="button" class="sc-icon" id="hsShow" title="Show your chats" aria-label="Show your chats" aria-controls="askSide" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <button type="button" class="sc-icon" id="hsRailNew" title="New chat" aria-label="New chat">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="ask-main">
+    <div class="ask-body">
+      <!-- The suggested questions for the role picked above open the conversation; they fold away once it starts -->
+      <div class="ask-fold" id="askStart">
+        <div class="ask-fold-in">
+          <div class="q-chips is-right" id="askStarters"></div>
+        </div>
+      </div>
+      <div class="ask-log" id="askLog"></div>
+    </div>
+    <div class="ask-dock">
+      <!-- The model and thinking level, set above the box -->
+      <div class="chat-models" id="askModels"></div>
+      <form class="chat-box ask-composer" id="askForm" hidden>
+        <textarea rows="2" placeholder="Ask a question about hospitals, states or measures" aria-label="Your question"></textarea>
+        <div class="chat-box-foot">
+          <button type="submit" class="btn btn-ink">Ask</button>
+        </div>
+      </form>
+    </div>
+    <div class="ask-dock-end" id="askDockEnd" aria-hidden="true"></div>
+    </div>
+    </div>
+  </main>
+
+  <footer class="footer" id="ov-notes">
     <div class="footer-inner">
       <div>
         <h4>About the data</h4>
@@ -660,6 +754,71 @@
       </div>
     </div>
   </footer>
+  </div>
+
+  <!-- Quick chat, docked beside the page: the page above narrows to make room (assets/js/chat/panel.js) -->
+  <aside class="side-chat" id="sideChat" aria-label="Quick chat" tabindex="-1" hidden>
+    <div class="sc-resize" id="scResize" role="separator" aria-orientation="vertical" aria-label="Resize the quick chat" tabindex="0" title="Drag to resize"></div>
+    <header class="sc-head">
+      <span class="sc-title"><svg class="cp-mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M7.998 15.035c-4.562 0-7.873-2.914-7.998-3.749V9.338c.085-.628.677-1.686 1.588-2.065.013-.07.024-.143.036-.218.029-.183.06-.384.126-.612-.201-.508-.254-1.084-.254-1.656 0-.87.128-1.769.693-2.484.579-.733 1.494-1.124 2.724-1.261 1.206-.134 2.262.034 2.944.765.05.053.096.108.139.165.044-.057.094-.112.143-.165.682-.731 1.738-.899 2.944-.765 1.23.137 2.145.528 2.724 1.261.566.715.693 1.614.693 2.484 0 .572-.053 1.148-.254 1.656.066.228.098.429.126.612.012.076.024.148.037.218.924.385 1.522 1.471 1.591 2.095v1.872c0 .766-3.351 3.795-8.002 3.795Zm0-1.485c2.28 0 4.584-1.11 5.002-1.433V7.862l-.023-.116c-.49.21-1.075.291-1.727.291-1.146 0-2.059-.327-2.71-.991A3.222 3.222 0 0 1 8 6.303a3.24 3.24 0 0 1-.544.743c-.65.664-1.563.991-2.71.991-.652 0-1.236-.081-1.727-.291l-.023.116v4.255c.419.323 2.722 1.433 5.002 1.433ZM6.762 2.83c-.193-.206-.637-.413-1.682-.297-1.019.113-1.479.404-1.713.7-.247.312-.369.789-.369 1.554 0 .793.129 1.171.308 1.371.162.181.519.379 1.442.379.853 0 1.339-.235 1.638-.54.315-.322.527-.827.617-1.553.117-.935-.037-1.395-.241-1.614Zm4.155-.297c-1.044-.116-1.488.091-1.681.297-.204.219-.359.679-.242 1.614.091.726.303 1.231.618 1.553.299.305.784.54 1.638.54.922 0 1.28-.198 1.442-.379.179-.2.308-.578.308-1.371 0-.765-.123-1.242-.37-1.554-.233-.296-.693-.587-1.713-.7Z"/><path d="M6.25 9.037a.75.75 0 0 1 .75.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 .75-.75Zm4.25.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 1.5 0Z"/></svg>Quick chat</span>
+      <div class="sc-actions">
+        <button type="button" class="sc-icon" id="scHistory" title="Recent chats" aria-label="Recent chats" aria-haspopup="menu" aria-expanded="false" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3.5 4v4h4M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="sc-icon" id="scNew" title="New chat" aria-label="New chat">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="sc-icon" id="scExpand" title="Open in Ask your data" aria-label="Open in Ask your data">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="sc-icon" id="scClose" title="Hide (Esc)" aria-label="Hide the quick chat">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="sc-recent" id="scRecent" role="menu" aria-label="Recent chats" hidden></div>
+    <div class="sc-meta"><div class="sc-account" id="scAccount"></div></div>
+    <div class="sc-body" id="scBody">
+      <div class="sc-log" id="scLog"></div>
+      <div class="sc-about" id="scAbout" hidden>
+        <div class="sc-ctx" id="scContext"></div>
+        <div class="sc-suggest-label">Suggested questions</div>
+        <div class="q-chips is-right" id="scSuggest"></div>
+      </div>
+    </div>
+    <div class="sc-dock">
+      <div class="chat-models" id="scModels"></div>
+      <form class="chat-box sc-composer" id="scForm" hidden>
+        <textarea rows="2" placeholder="Ask about this, or anything else" aria-label="Your question"></textarea>
+        <div class="chat-box-foot">
+          <button type="submit" class="btn btn-ink">Ask</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Right-click popup: becomes the quick chat panel once a question is typed or picked (assets/js/chat/panel.js) -->
+  <div class="qc-pop" id="qcPop" role="dialog" aria-label="Ask Copilot" hidden>
+    <header class="qc-pop-head">
+      <span class="qc-title"><svg class="cp-mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M7.998 15.035c-4.562 0-7.873-2.914-7.998-3.749V9.338c.085-.628.677-1.686 1.588-2.065.013-.07.024-.143.036-.218.029-.183.06-.384.126-.612-.201-.508-.254-1.084-.254-1.656 0-.87.128-1.769.693-2.484.579-.733 1.494-1.124 2.724-1.261 1.206-.134 2.262.034 2.944.765.05.053.096.108.139.165.044-.057.094-.112.143-.165.682-.731 1.738-.899 2.944-.765 1.23.137 2.145.528 2.724 1.261.566.715.693 1.614.693 2.484 0 .572-.053 1.148-.254 1.656.066.228.098.429.126.612.012.076.024.148.037.218.924.385 1.522 1.471 1.591 2.095v1.872c0 .766-3.351 3.795-8.002 3.795Zm0-1.485c2.28 0 4.584-1.11 5.002-1.433V7.862l-.023-.116c-.49.21-1.075.291-1.727.291-1.146 0-2.059-.327-2.71-.991A3.222 3.222 0 0 1 8 6.303a3.24 3.24 0 0 1-.544.743c-.65.664-1.563.991-2.71.991-.652 0-1.236-.081-1.727-.291l-.023.116v4.255c.419.323 2.722 1.433 5.002 1.433ZM6.762 2.83c-.193-.206-.637-.413-1.682-.297-1.019.113-1.479.404-1.713.7-.247.312-.369.789-.369 1.554 0 .793.129 1.171.308 1.371.162.181.519.379 1.442.379.853 0 1.339-.235 1.638-.54.315-.322.527-.827.617-1.553.117-.935-.037-1.395-.241-1.614Zm4.155-.297c-1.044-.116-1.488.091-1.681.297-.204.219-.359.679-.242 1.614.091.726.303 1.231.618 1.553.299.305.784.54 1.638.54.922 0 1.28-.198 1.442-.379.179-.2.308-.578.308-1.371 0-.765-.123-1.242-.37-1.554-.233-.296-.693-.587-1.713-.7Z"/><path d="M6.25 9.037a.75.75 0 0 1 .75.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 .75-.75Zm4.25.75v1.501a.75.75 0 0 1-1.5 0V9.787a.75.75 0 0 1 1.5 0Z"/></svg>Ask Copilot</span>
+      <button type="button" class="sc-icon" id="qcPopClose" title="Close (Esc)" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <div class="qc-pop-body">
+      <div class="sc-ctx" id="qcContext"></div>
+      <div class="sc-suggest-label">Suggested questions</div>
+      <div class="q-chips is-right" id="qcSuggest"></div>
+      <div class="qc-account" id="qcAccount"></div>
+    </div>
+    <div class="qc-pop-dock">
+      <form class="chat-box qc-composer" id="qcForm">
+        <textarea rows="2" placeholder="Ask about this, or anything else" aria-label="Your question"></textarea>
+        <div class="chat-box-foot"><span class="qc-hint">Opens the quick chat beside the page</span><button type="submit" class="btn btn-ink">Ask</button></div>
+      </form>
+    </div>
+  </div>
+
 
   <div id="tooltip" class="tooltip" role="tooltip"></div>
 
@@ -683,5 +842,11 @@
   <script src="assets/js/main.js"></script>
   <script src="assets/verification.js"></script>
   <script src="assets/js/explain-fig1.js"></script>
+  <script src="assets/js/chat/chat.js"></script>
+  <script src="assets/js/chat/check.js"></script>
+  <script src="assets/js/chat/dashfigs.js"></script>
+  <script src="assets/js/chat/ask.js"></script>
+  <script src="assets/js/chat/history.js"></script>
+  <script src="assets/js/chat/panel.js"></script>
 </body>
 </html>

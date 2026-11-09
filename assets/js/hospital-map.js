@@ -69,6 +69,7 @@
     shownFocus: '', pendingCenter: false, loc: null, radius: 10, sort: 'near', zips: null, HM: null, color: null,
     full: false, ranksOpen: false, nearCollapsed: false, sideCollapsed: false, viewTimer: 0, morphing: null, inlineCanvas: null,
     places: null, labelData: { states: EMPTY, cities: EMPTY }, labelLayers: [], shapes: null, hoverState: '', refit: false, sug: [], sugActive: -1, blurTimer: 0,
+    care: null, careMarkers: [], popupP: null,
     mapStyle: (() => { try { const s = localStorage.getItem(STYLE_KEY); return MAP_STYLES[s] ? s : 'minimal'; } catch (e) { return 'minimal'; } })(),
   };
   const scripts = {};
@@ -266,6 +267,13 @@
     // The radius sits under place labels; hospital dots sit above everything so they are never hidden
     st.map.addLayer({ id: 'hm-ring-fill', type: 'fill', source: 'hm-ring', paint: { 'fill-color': C.text, 'fill-opacity': 0.05 } }, firstSymbol);
     st.map.addLayer({ id: 'hm-ring-line', type: 'line', source: 'hm-ring', paint: { 'line-color': C.text, 'line-opacity': 0.55, 'line-width': 1.5, 'line-dasharray': [2, 2.5] } }, firstSymbol);
+    // A Copilot answer (nearest_care): the places it kept out of, and its routes, under the hospital dots
+    st.map.addSource('hm-care-zones', { type: 'geojson', data: EMPTY });
+    st.map.addSource('hm-care', { type: 'geojson', data: EMPTY });
+    st.map.addLayer({ id: 'hm-care-zone-fill', type: 'fill', source: 'hm-care-zones', paint: { 'fill-color': C.text, 'fill-opacity': 0.07 } }, firstSymbol);
+    st.map.addLayer({ id: 'hm-care-zone-line', type: 'line', source: 'hm-care-zones', paint: { 'line-color': C.text, 'line-opacity': 0.6, 'line-width': 1.5, 'line-dasharray': [2, 2] } }, firstSymbol);
+    st.map.addLayer({ id: 'hm-care-casing', type: 'line', source: 'hm-care', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': C.surface, 'line-width': 7, 'line-opacity': 0.9 } });
+    st.map.addLayer({ id: 'hm-care-route', type: 'line', source: 'hm-care', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': C.text, 'line-width': 3.5, 'line-opacity': 0.9 } });
     // Dots are drawn like map pins: a soft knock-out halo that pushes the streets back, an outer ring for hospitals that are
     // statistically better or worse, then the dot itself with a light outline. They grow as you zoom in.
     const scored = ['==', ['get', 's'], 1];
@@ -731,7 +739,8 @@
     st.popup = new maplibregl.Popup({ className: 'hm-pop', maxWidth: '320px', offset: 12, focusAfterOpen: false })
       .setLngLat([p.lon, p.lat]).setDOMContent(content).addTo(st.map);
     st.popupOpen = true;
-    st.popup.on('close', () => { st.popupOpen = false; });
+    st.popupP = p;
+    st.popup.on('close', () => { st.popupOpen = false; st.popupP = null; });
     requestAnimationFrame(() => keepPopupInView(st.popup));
   }
 
@@ -871,10 +880,72 @@
     }
     st.map.getSource('hm-ring').setData(st.ringData);
     updateSearchedLabel();
+    drawCare();
     if (fit) fitToMe('fly');
   }
 
+  // ---------- A Copilot answer on this map ----------
+  // nearest_care's hospitals, numbered by drive time, with their routes and the places the answer kept out of. It stays
+  // until the next search, or until the location is cleared.
+  function drawCare() {
+    if (!st.map || !st.styleReady || !st.map.getSource('hm-care')) return;
+    st.careMarkers.forEach((m) => m.remove());
+    st.careMarkers = [];
+    const p = st.care;
+    st.map.getSource('hm-care').setData(!p ? EMPTY : { type: 'FeatureCollection', features: p.results.filter((x) => x.line && x.line.length > 1)
+      .map((x) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: x.line.map(([la, lo]) => [lo, la]) } })) });
+    st.map.getSource('hm-care-zones').setData(!p ? EMPTY : { type: 'FeatureCollection', features: (p.zones || []).map((z) => (z.outline
+      ? { type: 'Feature', properties: {}, geometry: { type: 'MultiPolygon', coordinates: z.outline.map((r) => [r.map(([la, lo]) => [lo, la])]) } }
+      : circleFeature(z.lat, z.lon, z.miles, 72))) });
+    if (!p) return;
+    const fmtMin = (m) => (m < 60 ? `${Math.max(1, Math.round(m))} min` : `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')} min`);
+    p.results.filter((x) => x.role === 'top').forEach((x, i) => {
+      const el = document.createElement('div');
+      el.className = 'mat-pin ld';
+      el.innerHTML = `<span>${i + 1}</span><em>${fmtMin(x.minutes)}${x.routed ? '' : ' est.'}</em>`;
+      el.title = `${x.name} · ${fmtMin(x.minutes)}`;
+      st.careMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([x.lon, x.lat]).addTo(st.map));
+    });
+  }
+
+  function showCare(p) {
+    if (!p || !p.results || !p.results.length) return Promise.resolve(false);
+    const o = p.origin, far = Math.max(...p.results.map((x) => x.straight_miles || 0));
+    const radii = [...ui.radius.options].map((x) => +x.value);
+    st.radius = radii.find((r) => r >= far) || radii[radii.length - 1];
+    ui.radius.value = String(st.radius);
+    st.care = p;
+    const label = o.label || 'this spot';
+    ui.search.value = label.charAt(0).toUpperCase() + label.slice(1);
+    setLocation({ lat: o.lat, lon: o.lon, label, source: 'copilot' });
+    return Promise.resolve(true);
+  }
+
+  // What the map shows now, for Copilot: the state and measure, the place searched and the hospitals listed, the open card
+  function describe() {
+    if (!st.shownFocus || ui.wrap.hidden || !st.HM) return null;
+    const HM = st.HM, lines = [`Hospital street map (section 03, Fig 5): ${App.STATE_NAMES[st.shownFocus] || st.shownFocus}, hospitals coloured by ${HM.label}.`];
+    const one = (x) => { const f = x.p.f, v = HM.get(f); return `${f.name} (${f.city}, ${f.st}; CCN ${f.id}; ${x.p.er === 1 ? 'emergency department' : x.p.er === 0 ? 'no emergency department' : 'ER unknown'}; ${v == null ? `${HM.label} not reported` : `${HM.label} ${HM.fmt(v)}`}) ${fmtMi(x.d)}`; };
+    let suggest = [];
+    if (st.loc) {
+      const items = points.map((p) => ({ p, d: miles(st.loc, p) })).filter((x) => x.d <= st.radius).sort((a, b) => a.d - b.d);
+      lines.push(`Searched ${st.loc.label} (lat ${st.loc.lat.toFixed(4)}, lon ${st.loc.lon.toFixed(4)}), within ${st.radius} miles: ${items.length} hospitals. Nearest: ${items.slice(0, 8).map(one).join('; ')}.`);
+      const place = st.loc.source === 'gps' ? 'me' : st.loc.label;
+      suggest = [`Which hospitals within ${st.radius} miles of ${place} do best on ${HM.label}?`, `Directions to the nearest emergency department from ${place}`];
+    }
+    if (st.care) lines.push(`It shows Copilot’s last answer: routes to ${st.care.results.filter((x) => x.role === 'top').map((x) => x.name).join(', ')}${(st.care.zones || []).length ? `, keeping out of ${st.care.zones.map((z) => z.name).join(', ')}` : ''}.`);
+    if (st.popupOpen && st.popupP) {
+      const f = st.popupP.f;
+      lines.push(`Card open on the map: ${f.name} (${f.city}, ${f.st}; CCN ${f.id}): ${valueLine(st.popupP, HM)}.`);
+      suggest.unshift(`How does ${f.name} compare with the hospitals around it?`);
+    }
+    const subject = st.popupOpen && st.popupP ? { title: st.popupP.f.name, detail: `${st.popupP.f.city}, ${st.popupP.f.st} · ${valueLine(st.popupP, HM)}` }
+      : st.loc ? { title: `Hospitals within ${st.radius} miles of ${st.loc.source === 'gps' ? 'you' : st.loc.label}`, detail: `Coloured by ${HM.label}` } : null;
+    return { text: lines.join('\n'), suggest, subject };
+  }
+
   function setLocation(loc) {
+    if (loc.source !== 'copilot') st.care = null;
     st.loc = loc;
     let best = null, bestD = Infinity;
     points.forEach((p) => { const d = miles(loc, p); if (d < bestD) { bestD = d; best = p; } });
@@ -1080,6 +1151,7 @@
 
   function clearLocation() {
     st.loc = null;
+    st.care = null;
     if (st.map && st.styleReady) drawMe(false);
   }
 
@@ -1524,12 +1596,13 @@
   }
 
   init();
-  App.hospitalMap = { show, hide };
+  App.hospitalMap = { show, hide, showCare, describe };
   App.transitionFocus = transition;
   // Map plumbing shared with the maternity tab: one copy of the library, basemap styles, gazetteer and ZIP lookup
   App.mapKit = {
     loadScript, loadLib, loadStyle, styleFor, styleId, loadPlaces, loadZips, loadShapes, suggest, nearestPlaceTo, miles,
     styles: MAP_STYLES, ease: EASE, easeCss: EASE_CSS, duration: DUR, hideLines: HIDE_LINES,
     getStyle: () => st.mapStyle, setStyle: setMapStyle, onStyle: (fn) => styleListeners.push(fn), shapes: () => (st.shapes ? st.shapes.borders : null), decorBorders, decorLabels,
+    undecorate: (map) => decorated.delete(map),
   };
 })();

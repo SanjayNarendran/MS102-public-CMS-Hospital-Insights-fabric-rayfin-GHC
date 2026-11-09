@@ -112,6 +112,18 @@
     tbody.addEventListener('mouseleave', () => App.tip.hide());
   }
 
-  App.explorer = { init, render, reset: () => { ex.page = 0; } };
+  // What the table shows now, for Copilot: its filters, sort and the hospitals on the page
+  function describe() {
+    const all = rows(), col = COLS.find((c) => c.key === ex.sort);
+    const filters = [App.state.focus && `state ${App.STATE_NAMES[App.state.focus] || App.state.focus}`, ex.q.trim() && `search "${ex.q.trim()}"`,
+      ex.star && `${ex.star}-star patient experience`, ex.leaders && 'leaders only'].filter(Boolean);
+    const page = all.slice(ex.page * ex.size, (ex.page + 1) * ex.size);
+    const text = `Hospital explorer table (section 09): ${App.f0(all.length)} hospitals${filters.length ? ` (${filters.join(', ')})` : ''}, sorted by ${col ? col.label.replace('★', 'stars') : ex.sort} ` +
+      `${ex.dir > 0 ? 'ascending' : 'descending'}; page ${ex.page + 1}: ${page.slice(0, 10).map((f) => `${f.name} (${f.city}, ${f.st}; CCN ${f.id})`).join('; ')}.`;
+    const first = page[0];
+    return { text, suggest: first ? [`Show a report card for ${first.name}`, `How do the hospitals in this list compare on infections and safety?`] : [] };
+  }
+
+  App.explorer = { init, render, describe, reset: () => { ex.page = 0; } };
   App.register('explorer', render);
 })();

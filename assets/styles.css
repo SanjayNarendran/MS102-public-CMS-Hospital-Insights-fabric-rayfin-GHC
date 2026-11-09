@@ -14,7 +14,7 @@
   --radius: 4px;
   --radius-sm: 3px;
   --maxw: none;
-  --main-pad: clamp(36px, 4.5vw, 80px);
+  --main-pad: clamp(36px, 4.5cqw, 80px);
   --bar-h: 56px;
 
   --bg: #FAF9F5;
@@ -163,13 +163,15 @@ svg text { font-family: var(--font); }
 main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; }
 .hero { padding: 52px 0 28px; }
 .headline {
-  font-family: var(--font-display); font-weight: 500; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.04; letter-spacing: -0.015em;
+  font-family: var(--font-display); font-weight: 500; font-size: clamp(32px, 4.4cqw, 52px); line-height: 1.04; letter-spacing: -0.015em;
   margin: 0 0 20px; max-width: 24ch; text-wrap: balance;
 }
 .lede { font-size: 15.5px; line-height: 1.6; color: var(--text-2); margin: 0 0 12px; max-width: 72ch; }
 .lede b { color: var(--text); font-weight: 500; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px 64px; margin-bottom: 36px; }
 .hero-main .lede { margin-bottom: 0; }
+/* Text in the hero's first column runs to the column's edge, like everything else on the page */
+.hero-main .headline, .hero-main .lede { max-width: none; }
 /* Quality & safety summary: the headline and its description run the full width (the facts are on the Overview tab) */
 .q-hero .hero-grid { grid-template-columns: minmax(0, 1fr); }
 .q-hero .headline, .q-hero .lede { max-width: none; }
@@ -206,7 +208,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
    the figures. On wide screens the sections sit beside the contents rail (.q-rail), which shows the title and intro of
    the section you're reading; on narrow screens the title and intro sit under the rule. Figures keep grey rules. */
 :root {
-  --rule-section: var(--accent); --rule-w: 2px; --lcol: clamp(280px, 20vw, 340px);
+  --rule-section: var(--accent); --rule-w: 2px; --lcol: clamp(280px, 20cqw, 340px);
   --pill-bg: var(--accent); --pill-ink: #FFFFFF;
 }
 [data-theme="dark"] { --pill-ink: #1D1C1A; }
@@ -221,7 +223,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
 .chapter-title { margin: 0 0 14px; }
 .chapter-lede > div { padding-bottom: 28px; }
 :root { --stick-top: calc(var(--bar-h) + 1px); }
-@media (min-width: 1100px) {
+@container page (min-width: 1100px) {
   /* Beside the contents rail a section is one column: its rule (number, short name and Hide/Show), then its figures.
      Its title and intro show in the rail, so here they are kept only for screen readers. */
   .chapter-stick { grid-column: 1; grid-row: 1; }
@@ -268,7 +270,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
 .chapter-act:hover { color: var(--text); }
 .chapter-act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chapter-chev { transition: transform .5s var(--hm-ease); transform: rotate(180deg); }
-.chapter-lede p { margin: 0; color: var(--text-2); max-width: 76ch; font-size: 14.5px; line-height: 1.65; text-wrap: pretty; }
+.chapter-lede p { margin: 0; color: var(--text-2); font-size: 14.5px; line-height: 1.65; text-wrap: pretty; }
 .chapter-lede p b { color: var(--text); font-weight: 500; }
 .chapter-lede p + p { margin-top: 12px; }
 
@@ -311,31 +313,31 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
 .q-toc-desc .how-to { margin-top: 22px; line-height: 1.7; }
 .q-toc-desc .how-to li + li { margin-top: 12px; }
 .q-toc-desc .caveat b { color: var(--text-2); }
-@media (min-width: 1100px) {
-  .q-layout { display: grid; grid-template-columns: clamp(300px, 23vw, 400px) minmax(0, 1fr); column-gap: 48px; align-items: start; }
+@container page (min-width: 1100px) {
+  .q-layout { display: grid; grid-template-columns: clamp(300px, 23cqw, 400px) minmax(0, 1fr); column-gap: 48px; align-items: start; }
   /* The State filter's centre lines up with the first section's rule, and the rail stays put as the sections scroll */
   .q-rail { position: sticky; top: calc(var(--bar-h) + 17px); margin-top: calc(var(--rule-w) / 2 - 14px); }
   .q-rail-inner { max-height: calc(100dvh - var(--bar-h) - 33px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 0 4px 0 0; }
 }
 /* Shorter screens: the open section keeps its white space, a step tighter, so every section still shows at once; below
    951px the maternity how-to stays out of the rail (the map's search card covers it) */
-@media (min-width: 1100px) and (max-height: 1040px) {
+@media (max-height: 1040px) { @container page (min-width: 1100px) {
   .q-toc-item.on { margin: 10px 0 28px; }
   .q-toc-title { padding-top: 20px; }
   .q-toc-desc { padding: 16px 0 8px; }
   .q-toc-desc p { line-height: 1.72; }
   .q-toc-desc .how-to { margin-top: 16px; line-height: 1.6; }
   .q-toc-desc .how-to li + li { margin-top: 9px; }
-}
-@media (min-width: 1100px) and (max-height: 950px) { .q-toc-desc .caveat { display: none; } }
-@media (min-width: 1100px) and (max-height: 820px) {
+} }
+@media (max-height: 950px) { @container page (min-width: 1100px) { .q-toc-desc .caveat { display: none; } } }
+@media (max-height: 820px) { @container page (min-width: 1100px) {
   .q-toc-item.on { margin: 8px 0 22px; }
   .q-toc-title { padding-top: 16px; font-size: 20px; }
   .q-toc-desc { padding: 13px 0 6px; }
   .q-toc-desc p { line-height: 1.66; }
   .q-rail .state-pick { margin-bottom: 14px; }
-}
-@media (max-width: 1099px) {
+} }
+@container page (max-width: 1099px) {
   /* The section bar pins under the header on narrow screens */
   html[data-view="quality"] { scroll-padding-top: calc(var(--bar-h) + 58px); }
   /* Narrow screens: the rail is the State filter and a row of section numbers above the sections, which show their own
@@ -370,7 +372,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
 .caveat { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; }
 .caveat b { color: var(--text-2) !important; }
 /* How-to steps (the maternity map): one short point per line, each marked with a small square like the app's other keys */
-.how-to { list-style: none; margin: 12px 0 0; padding: 0; max-width: 76ch; line-height: 1.55; text-wrap: pretty; }
+.how-to { list-style: none; margin: 12px 0 0; padding: 0; line-height: 1.55; text-wrap: pretty; }
 .how-to li { position: relative; padding-left: 15px; }
 .how-to li + li { margin-top: 7px; }
 .how-to li::before { content: ""; position: absolute; left: 1px; top: .62em; width: 5px; height: 5px; background: var(--faint); }
@@ -388,9 +390,20 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--main-pad) 40px; 
 .card { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .card-head > div:first-child { flex: 1 1 320px; min-width: 0; }
+/* A header with a control beside the title (Fig 4's search): the description runs the full width under both. Written
+   for the card and for its copy in an answer (chat.css styles an answer's header otherwise). */
+:is(.card, .ans-fig) .card-head.wide-sub { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 16px; align-items: start; }
+:is(.card, .ans-fig) .card-head.wide-sub > div:first-child { display: contents; }
+:is(.card, .ans-fig) .card-head.wide-sub > div:first-child > * { grid-column: 1; }
+:is(.card, .ans-fig) .card-head.wide-sub > div:first-child > .sub { grid-column: 1 / -1; }
+:is(.card, .ans-fig) .card-head.wide-sub > .search { grid-column: 2; grid-row: 1 / span 2; }
+@container page (max-width: 640px) {
+  :is(.card, .ans-fig) .card-head.wide-sub { display: flex; gap: 16px; }
+  :is(.card, .ans-fig) .card-head.wide-sub > div:first-child { display: block; }
+}
 .eyebrow { font-size: 12px; color: var(--muted); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
 .card h3, .fig h3 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.25; }
-.card .sub, .fig .sub { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 80ch; }
+.card .sub, .fig .sub { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .chart { position: relative; width: 100%; min-height: 40px; }
 .chart svg { display: block; overflow: visible; }
 
@@ -566,7 +579,7 @@ html.xp-open { overflow: hidden; }
 .xp-sec { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--border); }
 .xp-sec > h3 { margin-top: 0 !important; font-family: var(--font-display); font-size: 19px; font-weight: 500; }
 .xp-sec h4 { margin: 20px 0 6px; font-size: 13.5px; font-weight: 600; color: var(--text); }
-.xp-lede { font-size: 15px; line-height: 1.6; color: var(--text) !important; max-width: 860px; }
+.xp-lede { font-size: 15px; line-height: 1.6; color: var(--text) !important; }
 .xp-small { font-size: 12.5px; color: var(--muted) !important; }
 .xp-mono { font-family: var(--font-mono); font-size: 12px; word-break: break-word; }
 .xp-foot { color: var(--accent-strong); font-weight: 600; margin-left: 1px; }
@@ -631,11 +644,13 @@ html.xp-open { overflow: hidden; }
   .xp-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .xp-flow li:nth-child(3) { padding-left: 0; border-left: 0; }
 }
-@media (max-width: 640px) {
+@container page (max-width: 640px) {
   .card-tools { align-items: flex-start; }
   .has-explain { position: relative; }
   .has-explain .card-head > div:first-child { padding-right: 96px; }
   .has-explain .explain-btn { position: absolute; top: 16px; right: 16px; }
+}
+@media (max-width: 640px) {
   .xp { width: 100vw; max-height: 100dvh; height: 100dvh; border-radius: 0; border: 0; }
   .xp-head, .xp-trust, .xp-body { padding-left: 16px; padding-right: 16px; }
   .xp-tabs { padding: 0 16px; }
@@ -880,7 +895,7 @@ html.hm-full-open { overflow: hidden; }
   .hm-metric { padding: 0 14px 10px; }
   .hm-side-body { padding: 10px 14px 16px; }
 }
-@media (max-width: 640px) {
+@container page (max-width: 640px) {
   .hm-canvas { height: 420px; }
   .hm-find { margin-left: 0; width: 100%; }
   .hm-search { flex: 1 1 150px; width: auto; }
@@ -922,23 +937,30 @@ html[data-hm-vt] #hmCanvas { view-transition-name: hm-canvas; }
 .footer li { margin-bottom: 4px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
+/* The page lays itself out by its own width, so it narrows cleanly beside the quick chat. A full-screen map leaves the
+   container (containment would pin its fixed position to the page) and goes back to the window's media queries. */
+.page { container: page / inline-size; }
+html.hm-full-open .page, .page:has(.mat-wrap.is-full) { container-type: normal; }
+
 /* Responsive */
-@media (max-width: 1180px) {
+@container page (max-width: 1180px) {
   .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kpi:nth-child(3n+1) { border-left: 0; padding-left: 0; }
   .kpi:nth-child(n+4) { border-top: 1px solid var(--border); }
   .brand-sub { display: none; }
 }
-@media (max-width: 1399px) {
+@container page (max-width: 1399px) {
   .span-8, .span-7, .span-6, .span-5, .span-4 { grid-column: span 12; }
+  /* every card spans the row here, so the gaps between the 12 columns only set a minimum width (11 × 40 px) */
+  .bento { column-gap: 0; }
 }
-@media (max-width: 980px) {
+@container page (max-width: 980px) {
   .chapter-head { grid-template-columns: 1fr; }
   .hero-grid { grid-template-columns: 1fr; }
   .source-id { display: none; }
 }
-@media (max-width: 640px) {
-  :root { --main-pad: 16px; }
+@container page (max-width: 640px) {
+  .page > * { --main-pad: 16px; }
   main, .topbar-inner { padding-left: 16px; padding-right: 16px; }
   .topbar-inner { gap: 18px; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1069,7 +1091,7 @@ html[data-view-vt] ::view-transition-new(root) { animation: view-in .5s var(--hm
 @keyframes mat-pin-in { from { opacity: 0; } }
 
 
-@media (max-width: 720px) {
+@container page (max-width: 720px) {
   .view-tabs { gap: 16px; }
   .view-tab { font-size: 13px; }
   .mat-go { padding: 0 10px; }
@@ -1187,6 +1209,16 @@ html.mat-full-open, html.mat-full-open body { overflow: hidden; }
   .mat-legend-keys { display: none; }
   .mat-mode { top: auto; left: 50%; bottom: calc(var(--sheet-h) + 84px + var(--attrib-h, 16px)); transform: translateX(-50%); transition: bottom .35s var(--hm-ease); }
 }
+@container page (max-width: 720px) {
+  /* Phones, in the page: the search sits above the map rather than over it */
+  .mat-wrap:not(.is-full) { height: auto; display: flex; flex-direction: column; }
+  .mat-wrap:not(.is-full) .mat-side { position: static; width: auto; max-height: none; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; box-shadow: none; }
+  .mat-wrap:not(.is-full) .mat-results { overflow: visible; }
+  .mat-wrap:not(.is-full) .mat-stage { position: relative; height: 62vh; min-height: 380px; }
+  .mat-wrap { --ctl-top: 12px; }
+  .mat-legend { padding: 7px 9px; font-size: 10.5px; }
+  .mat-legend-keys { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .mat-legend, .mat-mode, .mat-res-bar, .mat-res-act svg, .mat-search { transition: none !important; animation: none !important; }
 }
@@ -1219,7 +1251,7 @@ html.mat-full-open, html.mat-full-open body { overflow: hidden; }
 .mat-legend-bar i { position: absolute; top: -2px; bottom: -2px; width: 1px; background: color-mix(in srgb, var(--text) 35%, transparent); }
 .mat-legend .mat-legend-keys { display: inline-flex; gap: 10px; padding: 0 0 0 14px; border-top: 0; border-left: 1px solid var(--border); }
 .mat-legend .mat-legend-keys span { display: inline-flex; align-items: center; gap: 5px; }
-@media (max-width: 900px) { .mat-legend .mat-legend-keys { display: none; } }
+@container page (max-width: 900px) { .mat-legend .mat-legend-keys { display: none; } }
 
 /* A delivering hospital that is also the nearest NICU: black number plus a blue N, edged in blue like its route */
 .mat-pin.both { border-color: var(--nicu); box-shadow: 0 0 0 1px var(--nicu); }
@@ -1268,7 +1300,9 @@ a.btn { text-decoration: none; }
 .ov-tab-head h3 { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 500; letter-spacing: -0.005em; }
 .ov-tab-head h3 a { color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 4px; }
 .ov-tab-head h3 a:hover { text-decoration-color: var(--accent); }
-.ov-tab-head p { margin: 6px 0 0; max-width: 80ch; color: var(--text-2); font-size: 13.5px; line-height: 1.6; }
+.ov-tab-head p { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; line-height: 1.6; }
+.ov-more { color: var(--text); white-space: nowrap; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
+.ov-more:hover { text-decoration-color: var(--accent); }
 .ov-sections { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--border); }
 .ov-sections li { border-bottom: 1px solid var(--border); }
 .ov-row {
@@ -1296,7 +1330,7 @@ a.btn { text-decoration: none; }
    trend with the finding and its takeaway */
 .ins-hero .headline { max-width: none; }
 .ins-hero .lede { margin-bottom: 0; max-width: none; }
-.ins-body { display: grid; grid-template-columns: clamp(180px, 13vw, 220px) minmax(0, 1fr); column-gap: 44px; align-items: start; padding-top: 8px; border-top: var(--rule-w) solid var(--rule-section); }
+.ins-body { display: grid; grid-template-columns: clamp(180px, 13cqw, 220px) minmax(0, 1fr); column-gap: 44px; align-items: start; padding-top: 8px; border-top: var(--rule-w) solid var(--rule-section); }
 .ins-toc { position: sticky; top: calc(var(--bar-h) + 24px); padding-top: 28px; }
 .ins-toc-label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
 .ins-toc ol { list-style: none; margin: 0; padding: 0; }
@@ -1319,17 +1353,17 @@ a.btn { text-decoration: none; }
 .ins-spark { margin: 4px 0 2px; height: 44px; }
 .ins-spark svg { display: block; }
 .ins-trend-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-2); }
-.ins-main h2 { margin: 0; max-width: 34ch; font-family: var(--font-display); font-size: 24px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.18; text-wrap: balance; }
-.ins-text { margin: 12px 0 0; max-width: 78ch; color: var(--text-2); font-size: 14.5px; line-height: 1.65; }
-.ins-takeaway { margin-top: 16px; max-width: 78ch; padding: 12px 16px 14px; background: var(--surface-2); border-radius: 3px; }
+.ins-main h2 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.18; text-wrap: balance; }
+.ins-text { margin: 12px 0 0; color: var(--text-2); font-size: 14.5px; line-height: 1.65; }
+.ins-takeaway { margin-top: 16px; padding: 12px 16px 14px; background: var(--surface-2); border-radius: 3px; }
 .ins-takeaway-label { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--accent-strong); }
 .ins-takeaway p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.6; }
 .ins-close { padding: 40px 0 16px; }
 .ins-close-label { display: block; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
-.ins-close p { margin: 0; max-width: 40ch; font-family: var(--font-display); font-size: 28px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
+.ins-close p { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
 .ins-close em { font-style: normal; }
 
-@media (max-width: 1099px) {
+@container page (max-width: 1099px) {
   .doc-sec, .ins-body { grid-template-columns: 1fr; }
   .ins-toc { position: static; padding-top: 18px; }
   .ins-toc ol { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -1337,7 +1371,20 @@ a.btn { text-decoration: none; }
   .ov-row { grid-template-columns: 36px minmax(0, 1fr); }
   .ov-row-about { grid-column: 2; }
 }
-@media (max-width: 720px) {
+@container page (max-width: 720px) {
   .ins-finding { grid-template-columns: 1fr; }
   .data-table td:first-child { width: auto; }
 }
+
+/* Copilot's nearest-care answer (assets/js/chat/caremap.js): the dashboard map's pins, routes and result rows, inside an
+   answer; and the note on a dashboard map that shows such an answer */
+.cm-map { position: relative; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; background: var(--surface-2); }
+.cm-map .maplibregl-ctrl-group { border-radius: 3px; box-shadow: none; border: 1px solid var(--border); }
+.cm-nomap { margin: 0; padding: 18px; color: var(--muted); font-size: 13px; }
+.cm-list { margin-top: 10px; }
+.cm-list .mat-hosp { cursor: default; }
+.cm-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.cm-from { color: var(--muted); font-size: 12.5px; }
+.cm-zone-tag { padding: 1px 6px; border: 1px dashed var(--text-2); border-radius: 2px; background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--text-2); font-size: 11px; font-weight: 500; white-space: nowrap; pointer-events: none; }
+.mat-copilot { margin: 0 0 10px; padding: 7px 10px; border-left: 2px solid var(--text); background: var(--surface-2); font-size: 12.5px; line-height: 1.45; color: var(--text-2); }

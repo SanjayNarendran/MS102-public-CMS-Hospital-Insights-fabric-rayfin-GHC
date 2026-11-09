@@ -110,6 +110,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (it.value === value ? ' on' : '');
+      b.dataset.value = it.value;
       b.setAttribute('aria-pressed', String(it.value === value));
       b.textContent = it.label;
       b.addEventListener('click', () => onChange(it.value));

@@ -16,6 +16,7 @@ assets/hospital-locations.js
 assets/zip-centroids.js
 assets/places.js
 assets/state-shapes.js
+assets/vendor/vega/us-states-10m.json
 assets/verification.js
 
 # Fabric app (Rayfin) build output, dependencies and per-machine deployment state
@@ -33,3 +34,20 @@ fabric-app/rayfin/.temp/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Python environment for copilot/ (python3 -m venv .venv)
+.venv/
+
+# Rayfin Functions: dependencies, build output, generated per-deployment config and the CLI's agent files
+fabric-app/rayfin/functions/node_modules/
+fabric-app/rayfin/functions/dist/
+fabric-app/rayfin/functions/runtimemetadata.json
+fabric-app/rayfin/functions/src/config.generated.ts
+fabric-app/.agents/
+fabric-app/.mcp.json
+fabric-app/.vscode/
+fabric-app/AGENTS.md
+fabric-app/rayfin/.lockfile.json
+
+# Ask your data chat history on this computer (copilot/history.py): DuckDB and each answer's events
+data/chats/

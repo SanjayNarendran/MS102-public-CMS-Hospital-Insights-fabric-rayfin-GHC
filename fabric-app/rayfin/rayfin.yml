@@ -11,9 +11,13 @@ services:
     allowedRedirectUris:
       - http://localhost:5173
       - http://127.0.0.1:5173
-      # After the first deploy, add the hosting URL it prints (https://<name>.webapp.fabricapps.net) and deploy again
+      # The first `rayfin up` adds the app's hosting URL (https://<name>.webapp.fabricapps.net) here; keep it out of
+      # commits to a shared repository
+  # Ask your data's saved chats (rayfin/data/) and functions (rayfin/functions/): off for the dashboard alone;
+  # copilot/deploy.py app switches both on
   data:
     enabled: false
+    dialect: mssql
   staticHosting:
     enabled: true
     folder: dist
@@ -24,3 +28,9 @@ services:
     enabled: false
   functions:
     enabled: false
+    buildCommand: npm run build
+    auth:
+      type: application
+secrets:
+  - name: CHAT_TICKET_KEY
+    description: Signs the chat tickets that Ask your data sends to the GitHub Copilot relay

@@ -398,7 +398,9 @@
     const levelNote = shown.some((x) => x.h.nicu > 0 && x.h.level)
       ? '<p class="mat-note">N II is a Level II special care nursery; N III and N IV are NICUs for the smallest and sickest babies (Level IV is the highest). Levels come from the sources linked on each card.</p>'
       : r.nicu ? `<p class="mat-note">NICU levels (II, III or IV) aren’t published for ${esc(App.STATE_NAMES[r.loc.st] || 'this state')} in this data, so the blue N doesn’t show a level. Ask the hospital, or your doctor or midwife, what level of newborn care it provides.</p>` : '';
-    box.innerHTML = `<div class="mat-result mat-fade">
+    const cp = r.copilot;
+    const cpNote = cp ? `<p class="mat-copilot">${esc(copilotLine(cp))}</p>` : '';
+    box.innerHTML = `<div class="mat-result mat-fade">${cpNote}
       <div class="mat-key">
         <span><span class="mat-marks"><span class="mat-rank">1</span></span>Delivers babies</span>
         <span><span class="mat-marks"><span class="mat-rank n">N</span></span>NICU</span>
@@ -678,6 +680,10 @@
     kit().decorBorders(V.map, 'mt-', firstSymbol, C.text);
     addRasterLayers('mt-borders', true);
     V.map.addSource('mt-routes', { type: 'geojson', data: EMPTY });
+    // Places a Copilot answer kept out of (nearest_care avoid): a tint and a dashed edge, in ink rather than a colour
+    V.map.addSource('mt-zones', { type: 'geojson', data: zoneData() });
+    V.map.addLayer({ id: 'mt-zone-fill', type: 'fill', source: 'mt-zones', paint: { 'fill-color': C.text, 'fill-opacity': 0.07 } });
+    V.map.addLayer({ id: 'mt-zone-line', type: 'line', source: 'mt-zones', paint: { 'line-color': C.text, 'line-opacity': 0.6, 'line-width': 1.5, 'line-dasharray': [2, 2] } });
     V.map.addLayer({ id: 'mt-route-casing', type: 'line', source: 'mt-routes', layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': ['get', 'cas'], 'line-width': ['case', ['==', ['get', 'both'], 1], ['case', ['==', ['get', 'on'], 1], 11, 9], ['case', ['==', ['get', 'on'], 1], 9, 7]], 'line-opacity': ['get', 'op'] } });
     V.map.addLayer({ id: 'mt-route', type: 'line', source: 'mt-routes', layout: { 'line-join': 'round', 'line-cap': 'round' },
@@ -734,6 +740,7 @@
     if (!V.map || !V.styleReady) return;
     clearMarkers();
     const r = st.res;
+    if (V.map.getSource('mt-zones')) V.map.getSource('mt-zones').setData(zoneData());
     if (!r) { if (V.me) { V.me.remove(); V.me = null; } V.map.getSource('mt-routes').setData(EMPTY); return; }
     if (!V.me) {
       const el = document.createElement('div');
@@ -774,6 +781,7 @@
     // Every result and its whole route (roads can bulge beyond the straight line between you and the hospital)
     const r = st.res, pts = [r.loc, ...[...r.top, r.nicu, r.high].filter(Boolean).map((x) => x.h)];
     Object.values(r.routes).forEach((g) => g.coordinates.forEach(([lon, lat]) => pts.push({ lon, lat })));
+    ((r.copilot && r.copilot.zones) || []).filter((z) => !z.outline).forEach((z) => circle(z).geometry.coordinates[0].forEach(([lon, lat]) => pts.push({ lon, lat })));
     let w = 180, s = 90, e = -180, n = -90;
     pts.forEach((p) => { w = Math.min(w, p.lon); e = Math.max(e, p.lon); s = Math.min(s, p.lat); n = Math.max(n, p.lat); });
     // Keep the pins clear of the legend in the bottom-left corner, and their time labels (centred on each pin) clear of the sides
@@ -782,6 +790,21 @@
   }
 
   function routeColor(kind) { return kind === 'ld' ? App.C.text : cssVar('--nicu'); }
+
+  // A circle on the map, `miles` around a place
+  function circle(z, steps = 72) {
+    const d = z.miles / 3958.8, la = (z.lat * Math.PI) / 180, lo = (z.lon * Math.PI) / 180, ring = [];
+    for (let i = 0; i <= steps; i++) {
+      const b = (2 * Math.PI * i) / steps;
+      const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
+      const lo2 = lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+      ring.push([(lo2 * 180) / Math.PI, (la2 * 180) / Math.PI]);
+    }
+    return { type: 'Feature', properties: { name: z.name }, geometry: { type: 'Polygon', coordinates: [ring] } };
+  }
+  // A whole state kept out of is its outline; a town, a circle around it
+  const zoneFeature = (z) => (z.outline ? { type: 'Feature', properties: {}, geometry: { type: 'MultiPolygon', coordinates: z.outline.map((r) => [r.map(([la, lo]) => [lo, la])]) } } : circle(z));
+  const zoneData = () => ({ type: 'FeatureCollection', features: ((st.res && st.res.copilot && st.res.copilot.zones) || []).map(zoneFeature) });
 
   function drawRoutes() {
     if (!V.map || !V.styleReady || !st.res) return;
@@ -1060,6 +1083,83 @@
     return V.morphing;
   }
 
+  // ---------- Copilot ----------
+  const names = (a) => (a.length < 3 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
+  function copilotLine(cp) {
+    const zones = (cp.zones || []).map((z) => z.name.split(',')[0]);
+    const out = (cp.left_out || []).map((x) => titleCase(x.name));
+    return `From Copilot’s answer${zones.length ? `, keeping out of ${names(zones)}` : ''}.${out.length ? ` Left out: ${names(out)}.` : ''}`;
+  }
+
+  // A Copilot answer (copilot/tools.py nearest_care) shown as a search on this map: its start, the hospitals it ranked
+  // with their drive times and routes, and the places it kept out of. A new search or Clear replaces it.
+  function showCare(p) {
+    if (!kit() || !p || !p.results) return Promise.resolve(false);
+    if (!st.shown) show();
+    return load().then(() => {
+      if (!st.byCcn) st.byCcn = new Map(st.hosp.map((h) => [h.ccn, h]));
+      const item = (x) => { const h = st.byCcn.get(x.ccn); return h ? { h, crow: x.straight_miles, min: x.minutes, miles: x.miles, routed: !!x.routed } : null; };
+      const top = p.results.filter((x) => x.role === 'top').map(item).filter(Boolean);
+      if (!top.length) return false;
+      const own = (role) => p.results.filter((x) => x.role === role).map(item).filter(Boolean)[0] || null;
+      const nicu = own('nicu') || top.find((x) => x.h.nicu > 0) || null;
+      let high = own('high') || top.find((x) => isHighNicu(x.h)) || null;
+      if (high && nicu && high.h.ccn === nicu.h.ccn) high = null;
+      const routes = {};
+      p.results.forEach((x) => { if (x.line && x.line.length > 1) routes[x.ccn] = { type: 'LineString', coordinates: x.line.map(([la, lo]) => [lo, la]) }; });
+      const o = p.origin, near = kit().nearestPlaceTo(o.lat, o.lon);
+      const loc = { lat: o.lat, lon: o.lon, label: o.label || 'this spot', st: near && near.st, source: o.source === 'coordinates' ? 'map' : 'copilot' };
+      st.seq++;
+      st.gen++;
+      views.forEach((v) => { v.userMoved = false; if (v.spot) v.spot.remove(); });
+      st.loc = loc;
+      st.res = { loc, ld: top, ni: nicu ? [nicu] : [], hi: high ? [high] : [], routed: true, failed: false, routes, top, nicu, high,
+        copilot: { zones: p.zones || [], left_out: p.left_out || [], title: p.title || '' } };
+      st.popCcn = null;
+      st.hover = null;
+      st.resFolded = false;
+      ui.search.value = loc.label.charAt(0).toUpperCase() + loc.label.slice(1);
+      closeSuggest();
+      say('');
+      renderResults();
+      ui.results.scrollTop = 0;
+      each(() => drawResults(true));
+      return true;
+    });
+  }
+
+  // What the map shows now, for Copilot: the search, its hospitals and drive times, and the card open on the map
+  function describe() {
+    if (!st.shown || !st.data) return null;
+    const r = st.res, mode = (views[0] && views[0].mode) === 'nicu' ? 'drive time to a NICU' : 'drive time to delivery care';
+    if (!r || !r.top || !r.top.length) return { text: `Maternity care map (section 04): no search yet; the shading shows the estimated ${mode}.` };
+    const fmt = (x) => {
+      const n = x.h.nicu > 0 ? nicuText(x.h) : null;
+      return `${x.h.title} (${titleCase(x.h.city)}, ${x.h.st}; CCN ${x.h.ccn}${n ? `; ${n.label}` : ''}${x.h.phone ? `; ${x.h.phone}` : ''}): ${x.routed ? '' : 'about '}${fmtMin(x.min)}, ${fmtMi(x.miles)}${x.routed ? ' by road' : ' (estimated)'}`;
+    };
+    const from = { map: 'a point clicked on the map', gps: 'the reader’s location', zip: 'a ZIP code', place: 'a town', address: 'an address', copilot: 'Copilot’s last answer' }[r.loc.source] || r.loc.source;
+    const lines = [`Maternity care map (section 04): a search from ${r.loc.label} (lat ${r.loc.lat.toFixed(4)}, lon ${r.loc.lon.toFixed(4)}; ${from}). The shading shows the estimated ${mode}.`,
+      `Closest hospitals that deliver babies, ranked by drive time: ${r.top.map((x, i) => `${i + 1}. ${fmt(x)}`).join('; ')}.`];
+    const inTop = (x) => r.top.some((y) => y.h.ccn === x.h.ccn);
+    if (r.nicu && !inTop(r.nicu)) lines.push(`Nearest NICU: ${fmt(r.nicu)}.`);
+    if (r.high && !inTop(r.high)) lines.push(`Nearest Level III or IV NICU: ${fmt(r.high)}.`);
+    lines.push('The map draws the road route from the start to each of these hospitals.');
+    if (r.copilot) lines.push(copilotLine(r.copilot));
+    if (st.popCcn && st.byCcn.get(st.popCcn)) lines.push(`Open on the map: ${st.byCcn.get(st.popCcn).title}.`);
+    const towns = r.top.map((x) => titleCase(x.h.city));
+    const common = towns.find((t, i) => towns.indexOf(t) !== i) || towns[0];
+    const place = r.loc.source === 'map' ? 'this spot' : r.loc.label;
+    const short = (x) => x.h.title.replace(/^M Health Fairview /, '').replace(/ (Hospital|Medical Center)$/i, '');
+    const suggest = [
+      `What are my options if I can’t go into ${common}?`,
+      `Which other hospitals that deliver babies are within an hour of ${place}?`,
+      `Compare ${names(r.top.map(short))} on safety and patient experience`,
+    ];
+    if (r.top.some((x) => x.h.level) || r.high) suggest.push('Which of these has the highest-level NICU, and how far is it?');
+    const subject = { title: `Drive times from ${r.loc.label}`, detail: r.top.map((x, i) => `${i + 1} ${short(x)} ${fmtMin(x.min)}`).join(' · ') };
+    return { text: lines.join('\n'), suggest, subject };
+  }
+
   // ---------- Lifecycle ----------
   function show() {
     st.shown = true;
@@ -1157,6 +1257,6 @@
     }, { rootMargin: '1200px 0px' });
     io.observe(sec);
   })();
-  App.maternity = { show, render };
+  App.maternity = { show, render, showCare, describe, card: () => document.getElementById('matCard') };
   App.register('maternity', render);
 })();

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build the hospital map's reference layers: place names (assets/places.js) and state outlines (assets/state-shapes.js).
+"""Build the hospital map's reference layers: place names (assets/places.js) and state outlines (assets/state-shapes.js,
+plus the unchanged TopoJSON in assets/vendor/vega/us-states-10m.json for Ask your data's maps).
 
     python3 build_places.py
 
@@ -25,6 +26,7 @@ import zipfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "assets", "places.js")
 SHAPES_OUT = os.path.join(ROOT, "assets", "state-shapes.js")
+TOPO_OUT = os.path.join(ROOT, "assets", "vendor", "vega", "us-states-10m.json")
 US_ATLAS = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"
 FIPS = {
     "01": "AL", "02": "AK", "04": "AZ", "05": "AR", "06": "CA", "08": "CO", "09": "CT", "10": "DE", "11": "DC", "12": "FL",
@@ -116,7 +118,11 @@ def main():
 
 
 def build_state_shapes():
-    topo = json.loads(fetch(US_ATLAS))
+    raw = fetch(US_ATLAS)
+    os.makedirs(os.path.dirname(TOPO_OUT), exist_ok=True)
+    with open(TOPO_OUT, "wb") as f:
+        f.write(raw)
+    topo = json.loads(raw)
     (sx, sy), (tx, ty) = topo["transform"]["scale"], topo["transform"]["translate"]
     arcs = []
     for arc in topo["arcs"]:

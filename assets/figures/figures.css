@@ -1,0 +1,250 @@
+/*
+ * Figure library (assets/figures/*.js) in Ask your data answers. From the conversational repo's visual.html, restyled
+ * to the dashboard: hairline rules, 3px radii, Fira weights up to 600, ink for emphasis, orange only for worse.
+ * Everything is scoped to .fx, the plot area of an answer figure.
+ */
+.fx { position: relative; width: 100%; min-height: 40px; font-size: 13px; line-height: 1.45; color: var(--text); }
+.fx svg text { font-family: var(--font); }
+.fx .fcontrols { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin: 0 0 10px; }
+.fx .ftop { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 0 0 12px; }
+.fx .flegend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.fx .fchip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fx .fchip b { color: var(--text); font-weight: 600; }
+.fx .fchip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.fx .fchip i.ring { border: 2px solid; background: transparent !important; }
+.fx .fchip i.line { width: 16px; height: 2px; border-radius: 0; }
+.fx .fchip i.tick { width: 2px; height: 12px; border-radius: 0; }
+.fx .fchip i.dash { width: 16px; height: 0; border-top: 2px dashed var(--muted); background: none !important; border-radius: 0; }
+.fx .fchip i.diamond { width: 8px; height: 8px; border-radius: 0; transform: rotate(45deg); }
+.fx .fstep, .fx .fseg { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.fx .fstep button, .fx .fseg button {
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-2); height: 28px; padding: 0 9px; border-radius: 3px;
+  font: 400 12.5px var(--font); cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.fx .fstep button:hover, .fx .fseg button:hover { border-color: var(--text); color: var(--text); }
+.fx .fstep button[aria-pressed=true], .fx .fseg button[aria-pressed=true] { background: var(--text); border-color: var(--text); color: var(--bg); }
+.fx .fstep .fplay { width: 30px; padding: 0; }
+.fx .fselect { flex: 1 1 auto; }
+.fx .fsearch {
+  display: inline-flex; align-items: center; gap: 8px; height: 30px; min-width: 200px; padding: 0 10px; color: var(--muted);
+  border: 1px solid var(--border); background: var(--field); border-radius: 3px;
+}
+.fx .fsearch.wide { flex: 1 1 220px; max-width: 340px; }
+.fx .fsearch:focus-within { border-color: var(--text); }
+.fx .fsearch svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; flex: none; }
+.fx .fsearch input { border: 0; outline: 0; background: transparent; font: 400 12.5px var(--font); color: var(--text); width: 100%; min-width: 0; }
+.fx .fsearch input::placeholder { color: var(--faint); }
+.fx .fsearch button { border: 0; background: none; color: var(--muted); width: 18px; height: 18px; padding: 0; cursor: pointer; font-size: 14px; line-height: 1; }
+.fx .fbody { position: relative; }
+.fx .fsvg { display: block; overflow: visible; max-width: 100%; height: auto; }
+.fx .fnotes { margin-top: 8px; font-size: 12px; color: var(--muted); display: grid; gap: 2px; }
+
+/* text in the figures */
+.fx .ftick { font-size: 10.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .ftick.strong { fill: var(--text); font-weight: 600; }
+.fx .ftick.good { fill: var(--good); font-weight: 600; }
+.fx .ftick.bad { fill: var(--bad); font-weight: 600; }
+.fx .ftick.faint { fill: var(--faint); }
+.fx .flabel { font-size: 12.5px; font-weight: 400; fill: var(--text); }
+.fx .flabel.sm { font-size: 12px; }
+.fx .flabel.strong { font-weight: 600; }
+.fx .fsub { font-size: 11px; fill: var(--muted); color: var(--muted); }
+.fx .fsub.good { fill: var(--good); font-weight: 500; }
+.fx .fsub.bad { fill: var(--bad); font-weight: 500; }
+.fx .fsub.strong { fill: var(--text); font-weight: 600; }
+.fx .fsub.halo, .fx .fzone-label.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.fx .fnote-inline { font-size: 11px; fill: var(--text-2); font-weight: 500; }
+.fx .fval { font-size: 12.5px; font-weight: 600; fill: var(--text); font-variant-numeric: tabular-nums; }
+.fx .fval.sm { font-size: 12px; }
+.fx .fval.good { fill: var(--good); }
+.fx .fval.bad { fill: var(--bad); }
+.fx .fdelta { font-size: 12px; font-weight: 500; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fdelta.good, .fx .fdir.good { fill: var(--good); }
+.fx .fdelta.bad, .fx .fdir.bad { fill: var(--bad); }
+.fx .fdir { font-size: 11px; font-weight: 500; }
+.fx .frow { cursor: pointer; }
+.fx .frow .fhit { fill: transparent; }
+.fx .frow:hover .fhit { fill: var(--surface-2); }
+.fx .frow.hi .fhit { fill: var(--surface-2); }
+.fx .fbench { stroke: var(--text-2); stroke-width: 1.2; stroke-dasharray: 4 4; }
+.fx .fbench.accent { stroke: var(--text); }
+.fx .fbench.solid { stroke-dasharray: none; stroke: var(--text-2); stroke-width: 1.2; }
+.fx .fbench-label { font-size: 10.5px; fill: var(--text-2); font-weight: 600; }
+.fx .fbench-label.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+.fx .fbench-label.accent { fill: var(--text); }
+.fx .fband { fill: var(--text); fill-opacity: .05; }
+.fx .fband-label { font-size: 10.5px; font-weight: 500; fill: var(--muted); }
+.fx .fpeak { font-size: 11px; font-weight: 500; fill: var(--text-2); }
+.fx .fend { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fx .fend-m { fill: var(--muted); }
+.fx .fend-a, .fx .fend-f { fill: var(--text); font-weight: 600; }
+.fx .fannot { font-size: 11.5px; font-weight: 500; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+.fx .fannot-line { stroke: var(--text); stroke-width: 1; }
+.fx .frule { stroke: var(--faint); stroke-width: 1; stroke-dasharray: 3 3; }
+.fx .fpanel { fill: var(--bg); stroke: var(--border); }
+.fx .fpanel.hi { stroke: var(--text); stroke-width: 1.4; }
+.fx .fp-title { font-size: 12.5px; font-weight: 500; fill: var(--text); }
+.fx .fp-value { font-family: var(--font-display); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.fx .fp-delta { font-size: 11px; font-weight: 500; fill: var(--muted); }
+.fx .fp-delta.good { fill: var(--good); }
+.fx .fp-delta.bad { fill: var(--bad); }
+.fx .fsync { font-size: 11px; font-weight: 600; fill: var(--text); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+.fx .fhead { font-size: 12px; font-weight: 500; fill: var(--text-2); }
+.fx .fhead-r { font-size: 11px; font-weight: 500; fill: var(--muted); }
+.fx .fhead-r.good { fill: var(--good); }
+.fx .fhead-r.bad { fill: var(--bad); }
+.fx .fslabel { font-size: 12px; fill: var(--text-2); font-variant-numeric: tabular-nums; }
+.fx .fcell { font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; pointer-events: none; }
+.fx .fcell.base { font-weight: 600; }
+.fx .fcell.na { font-weight: 400; }
+.fx .faxis-title { font-size: 11px; fill: var(--muted); }
+.fx .fquad { font-size: 10.5px; font-weight: 500; fill: var(--faint); }
+.fx .ftrend { fill: none; stroke: var(--text-2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.fx .fpt-label { font-size: 11px; font-weight: 600; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; pointer-events: none; }
+.fx .fleader { stroke: var(--muted); stroke-width: 1; pointer-events: none; }
+.fx .ffunnel-band { fill: var(--text); fill-opacity: .05; }
+.fx .ffunnel-limit { fill: none; stroke: var(--muted); stroke-opacity: .7; stroke-dasharray: 4 4; }
+.fx .fgroup, .fx .fgroup-h { font-size: 11px; font-weight: 600; fill: var(--text-2); }
+.fx .ftm-label { font-size: 12px; font-weight: 600; }
+.fx .ftm-value { font-size: 11px; font-variant-numeric: tabular-nums; opacity: .85; }
+.fx .tile text { pointer-events: none; }
+.fx .fl-title { font-size: 11px; fill: var(--muted); }
+.fx .fl-tick { font-size: 10.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fl-tick.mid { fill: var(--text); font-weight: 600; }
+.fx .fwaffle-pct { font-family: var(--font-display); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.fx .fgauge-val { font-family: var(--font-display); font-size: 26px; font-weight: 500; fill: var(--text); font-variant-numeric: tabular-nums; }
+.fx .fgauge-val.good { fill: var(--good); }
+.fx .fgauge-val.bad { fill: var(--bad); }
+
+/* beeswarm, forest, report card */
+.fx .fzone.bad { fill: var(--bad); fill-opacity: .06; }
+.fx .fzone.good { fill: var(--good); fill-opacity: .06; }
+.fx .fzone-label { font-size: 10.5px; font-weight: 500; }
+.fx .fzone-label.bad { fill: var(--bad); }
+.fx .fzone-label.good { fill: var(--good); }
+.fx .fzone.mid { fill: var(--text); fill-opacity: .045; }
+.fx .fzone-label.mid { fill: var(--text-2); }
+.fx .fmed { stroke: var(--text-2); stroke-width: 1.5; stroke-linecap: round; }
+.fx .fgl { font-size: 12.5px; font-weight: 500; fill: var(--text); }
+.fx .fgl.strong { fill: var(--text); font-weight: 600; }
+.fx .fhl { font-size: 12px; font-weight: 600; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; pointer-events: none; }
+.fx .fhl-sub { font-size: 11px; font-weight: 500; fill: var(--muted); }
+.fx .fhl-sub.good { fill: var(--good); }
+.fx .fhl-sub.bad { fill: var(--bad); }
+.fx .fci { font-size: 11.5px; fill: var(--muted); }
+.fx .frc-val { font-size: 16px; font-weight: 600; fill: var(--text); font-variant-numeric: tabular-nums; }
+.fx .frc-val.good { fill: var(--good); }
+.fx .frc-val.bad { fill: var(--bad); }
+.fx .frc-track { stroke: var(--border); stroke-width: 1; }
+.fx .frc-whisk { stroke: var(--neutral); stroke-width: 2; stroke-linecap: round; }
+.fx .frc-box { fill: var(--surface-3); }
+.fx .fbadge { stroke-width: 1; }
+.fx .fbadge.good { fill: var(--good-soft); stroke: color-mix(in srgb, var(--good) 40%, transparent); }
+.fx .fbadge.bad { fill: var(--bad-soft); stroke: color-mix(in srgb, var(--bad) 40%, transparent); }
+.fx .fbadge.neutral { fill: var(--surface-2); stroke: var(--border); }
+.fx .fbadge-t { font-size: 11px; font-weight: 500; fill: var(--muted); }
+.fx .fbadge-t.good { fill: var(--good); }
+.fx .fbadge-t.bad { fill: var(--bad); }
+
+/* scorecard and table */
+.fx .fsc-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 0 0 10px; }
+.fx .fsc-count { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fsc-table td { padding: 7px 10px; vertical-align: middle; }
+.fx .fsc-table th { padding: 8px 10px; }
+.fx .fsc-name { min-width: 180px; max-width: 300px; white-space: normal !important; }
+.fx .fsc-l { font-weight: 500; color: var(--text); font-size: 12.5px; line-height: 1.25; }
+.fx .fsc-s { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.fx .fbadge-h { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 2px; font-size: 11px; font-weight: 500; color: var(--text-2); border: 1px solid var(--border-strong); vertical-align: 1px; }
+.fx .fstars { color: var(--text-2); letter-spacing: 1px; font-size: 12px; }
+.fx .fstars i { font-style: normal; color: var(--surface-3); }
+.fx .fpill { display: inline-block; min-width: 44px; padding: 2px 7px; border-radius: 2px; font-weight: 500; text-align: center; font-variant-numeric: tabular-nums; }
+.fx .fpill.good { background: var(--good-soft); color: var(--good); }
+.fx .fpill.bad { background: var(--bad-soft); color: var(--bad); }
+.fx .fpill.neutral { color: var(--text-2); }
+.fx .fsc-strip { display: inline-flex; align-items: center; gap: 8px; }
+.fx .fsc-v { font-weight: 500; min-width: 34px; text-align: right; }
+.fx .fsc-v.good { color: var(--good); }
+.fx .fsc-v.bad { color: var(--bad); }
+.fx .fsc-track { position: relative; width: 64px; height: 1px; background: var(--border-strong); }
+.fx .fsc-track b { position: absolute; top: -5px; width: 1px; height: 11px; background: var(--muted); }
+.fx .fsc-track i { position: absolute; top: -3px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--text-2); }
+.fx .fsc-track i.good { background: var(--good); }
+.fx .fsc-track i.bad { background: var(--bad); }
+.fx .fsc-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fsc-foot .btn:disabled { opacity: .4; cursor: default; }
+.fx .fmuted { color: var(--faint); }
+.fx .ftable { overflow-x: auto; border-top: 1px solid var(--border); }
+.fx .ftable table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.fx .ftable th, .fx .ftable td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.fx .ftable th { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--bg); cursor: pointer; user-select: none; position: sticky; top: 0; }
+.fx .ftable th.num, .fx .ftable td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.fx .ftable td.hasbar { position: relative; }
+.fx .ftable td.hasbar span { position: relative; }
+.fx .ftable .tbar { position: absolute; right: 8px; top: 7px; bottom: 7px; background: var(--text); opacity: .1; max-width: calc(100% - 16px); }
+.fx .ftable tbody tr { cursor: pointer; }
+.fx .ftable tbody tr:hover td { background: var(--surface-2); }
+.fx .ftable tr.hi td { background: var(--surface-2); font-weight: 500; }
+.fx .ftable .tmore { padding: 8px 10px; }
+
+/* fan, lollipop, bump, alluvial, likert, columns, pareto, kpis */
+.fx .fgap { fill: var(--surface-2); opacity: .7; }
+.fx .fgap-label { font-size: 10.5px; fill: var(--muted); }
+.fx .ffan-edge { fill: none; stroke: var(--muted); stroke-width: 1; stroke-opacity: .5; }
+.fx .fchg { font-size: 12.5px; font-weight: 600; fill: var(--text-2); font-variant-numeric: tabular-nums; }
+.fx .fchg.good { fill: var(--good); }
+.fx .fchg.bad { fill: var(--bad); }
+.fx .fpair { font-size: 12px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fbump-n { font-size: 10px; font-weight: 600; pointer-events: none; font-variant-numeric: tabular-nums; }
+.fx .fbump-l { fill: var(--muted); font-variant-numeric: tabular-nums; }
+.fx .fbump-l.strong { font-weight: 600; }
+.fx .falv-l { font-size: 12.5px; font-weight: 600; fill: var(--text); }
+.fx .falv-l.stars { font-size: 14px; letter-spacing: 1px; }
+.fx .flk-pct { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fx .flk-pct.good { fill: var(--good); }
+.fx .flk-pct.bad { fill: var(--bad); }
+.fx .fcol-v { font-size: 13px; font-weight: 600; fill: var(--text); font-variant-numeric: tabular-nums; }
+.fx .fcol-v.bad { fill: var(--bad); }
+.fx .fcol-x { font-size: 12px; fill: var(--text-2); }
+.fx .fcol-x.stars { font-size: 15px; letter-spacing: 1px; }
+.fx .fzero { fill: none; stroke: var(--muted); stroke-dasharray: 3 3; }
+.fx .fpareto-callout { font-size: 11.5px; font-weight: 600; fill: var(--text); }
+.fx .fkpis { display: grid; gap: 0 28px; }
+.fx .fkpi { border-top: 1px solid var(--border-strong); padding: 10px 0 6px; cursor: pointer; }
+.fx .fkpi:hover { border-top-color: var(--text); }
+.fx .fkpi.dim { opacity: .45; }
+.fx .k-label { font-size: 12.5px; color: var(--text-2); }
+.fx .k-value { font-family: var(--font-display); font-size: 30px; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.fx .k-delta { font-size: 12px; font-weight: 500; color: var(--muted); }
+.fx .k-delta.good { color: var(--good); }
+.fx .k-delta.bad { color: var(--bad); }
+.fx .k-delta span { color: var(--muted); font-weight: 400; }
+.fx .k-spark { display: block; width: 100%; height: 34px; margin-top: 8px; }
+
+/* Vega-Lite and custom visuals */
+.fx.vega-embed { width: 100%; display: block; }
+.fx svg.marks { max-width: 100%; height: auto; }
+.fx .vega-bindings { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.fx .vega-bind { display: flex; align-items: center; gap: 8px; }
+.fx .vega-bind-name { font-weight: 500; }
+.fx input[type=range] { accent-color: var(--text); width: 220px; }
+.fx select { font: 12px var(--font); color: var(--text); background: var(--field); border: 1px solid var(--border); border-radius: 3px; padding: 3px 8px; }
+.fx summary { display: none; }
+.fx iframe.fx-custom { display: block; width: 100%; height: 160px; border: 0; }
+#vg-tooltip-element.vg-tooltip {
+  font: 12.5px/1.45 var(--font); color: var(--text); background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 3px; box-shadow: var(--float); padding: 9px 11px;
+}
+#vg-tooltip-element.vg-tooltip td.key { color: var(--muted); font-weight: 400; }
+#vg-tooltip-element.vg-tooltip td.value { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+/* the dashboard tooltip, for figures' good/bad values */
+.tooltip td.good { color: var(--good); }
+.tooltip td.bad { color: var(--bad); }
+
+/* Vega's tooltip positioning, normally injected as a <style> element, which a strict CSP would block */
+#vg-tooltip-element { position: fixed; z-index: 1000; visibility: hidden; max-width: 320px; pointer-events: none; }
+#vg-tooltip-element.visible { visibility: visible; }
+#vg-tooltip-element table { border-spacing: 0; }
+#vg-tooltip-element td { padding: 2px 0; vertical-align: top; }
+#vg-tooltip-element td.key { padding-right: 12px; text-align: right; }
